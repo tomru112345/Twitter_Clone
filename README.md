@@ -28,6 +28,10 @@
 
 ### webpacker install
 
+```bash
+rails new [app name]
+```
+
 webpackerをインストールする
 
 ```bash
