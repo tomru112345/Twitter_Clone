@@ -48,6 +48,45 @@ http://localhost:3000 にアクセス
 
 ![初回起動](./img/rails01.png)
 
+## コントローラのアクションの追加
+
+Application コントローラに hello を追加
+
+* app/controllers/application_controller.rb
+
+```rb
+class ApplicationController < ActionController::Base
+  protect_from_forgery with: :exception
+
+  def hello
+    render html: "hello, world!"
+  end
+end
+```
+
+* config/routes.rb 内の設定変更で、表示したいアクションを変更できる
+
+```rb
+Rails.application.routes.draw do
+  # For details on the DSL available within this file,
+  # see http://railsguides.jp/routing.html
+end
+```
+
+以下のように変更してみる
+
+```rb
+Rails.application.routes.draw do
+  root 'application#hello'
+end
+```
+
+これで上記同様、アクセス
+
+以下のような表示になっている
+
+![デフォルトの表示を変更](./img/rails02.png)
+
 ## [TODO] Railsアプリのカスタマイズ
 
 ### ビューおよびコントローラーの作成
