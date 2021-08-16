@@ -28,6 +28,8 @@
 
 ### webpacker install
 
+アプリケーションを作成する
+
 ```bash
 rails new [app name]
 ```
