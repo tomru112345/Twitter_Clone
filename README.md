@@ -2,11 +2,53 @@
 
 今回の Open Hack U で行うことを記したりコードを載せたりします
 
-## Ruby install
+## 環境構築
 
-* [Rubyのダウンロードとインストール | Ruby入門 | RubyLife](https://www.javadrive.jp/ruby/install/index1.html)
+以下のソフトウェアをインストールすることで基本的な rails の web サーバを起動できます
 
-## Railsアプリのカスタマイズ
+### Ruby install
+
+* [Rubyのダウンロードとインストール](https://www.javadrive.jp/ruby/install/index1.html)
+
+### Ruby on Rails install
+
+* [Railsをインストールする](https://www.javadrive.jp/rails/install/index1.html)
+
+### SQLite3 install
+
+* [RailsからSQLite3を利用できるようにする](https://www.javadrive.jp/rails/install/index2.html)
+
+### Node.js install
+
+* [Node.jsをインストールする](https://qiita.com/sefoo0104/items/0653c935ea4a4db9dc2b)
+
+### Yarn install
+
+* [Yarn を導入しよう（Windows）](https://qiita.com/kurararara/items/21c70c4adfd3bb323412)
+
+### webpacker install
+
+webpackerをインストールする
+
+```bash
+rails webpacker:install
+```
+
+### サーバを起動
+
+web サーバを起動する
+
+```bash
+rails s
+```
+
+http://localhost:3000 にアクセス
+
+以下のように表示される
+
+![初回起動](./img/rails01.png)
+
+## [TODO] Railsアプリのカスタマイズ
 
 ### ビューおよびコントローラーの作成
 
