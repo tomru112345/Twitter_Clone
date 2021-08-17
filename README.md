@@ -2,6 +2,48 @@
 
 今回の Open Hack U で行うことを記したりコードを載せたりします
 
+## 記事編集方法
+
+手順を都度更新する方法をいかに記す
+
+### git clone する
+
+手元に github のリポジトリと同じ環境をダウンロードしてくる
+
+```bash
+git clone https://github.com/tomru112345/OpenHACK-U.git
+```
+
+### 手元の環境を更新する
+
+作業前に必ず行う!
+
+ダウンロードしたリポジトリの内容が最新かどうかチェックし、更新する
+
+```bash
+git pull
+```
+
+### git add する
+
+```bash
+git add [ファイル名]
+```
+
+### git commit する
+
+```bash
+git commit -m "[変更した内容文]"
+```
+
+### git push する
+
+push して github の内容を更新する
+
+```bash
+git push -u origin main
+```
+
 ## 環境構築
 
 以下のソフトウェアをインストールすることで基本的な rails の web サーバを起動できます
