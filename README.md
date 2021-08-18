@@ -199,6 +199,76 @@ railsデフォルトのscssではなくて、より簡潔な記述が出来るsa
  end
 ```
 
+### 認証機能のコードを自動生成
+
+認証機能のためのコードを自動生成させる。
+
+* gem の sorcery の機能を使う。
+
+```bash
+rails g sorcery:install
+```
+
+### scaffold で users を作成
+
+* sorcery:install で users テーブル作成のマイグレーションファイルを作成している
+
+  * --skip-migration する
+
+* scaffold で通常生成される scaffold.css というファイルが bootstrap と競合して表示がおかしくなる
+
+  * 不要
+
+* -s : 既存のファイル生成をスキップする
+
+* --skip-collision-check : Skip collision check
+
+```bash
+rails g scaffold user -s --no-stylesheets --skip-migration --skip-collision-check
+```
+
+### ユーザー名、表示名、プロフィールのカラムを追加
+
+```bash
+rails g migration add_name_and_screen_name_and_bio_to_users name:string screen_name:string bio:string
+```
+
+### マイグレーションしてデータベース・テーブルを作成
+
+```bash
+rake db:migrate
+```
+
+### サインアップ用のコントローラーを生成
+
+サインアップの機能に、registrations の名前をあてている
+
+新規登録フォーム画面の new アクションと、それを POST メソッドで受け取るcreate アクションを想定していますが、テンプレートを持つ画面は new 飲みなので、new のみ指定する。
+
+```bash
+rails generate controller registrations new
+```
+
+### Bootstrap の読み込み
+
+app/assets/stylesheets/application.css を application.css.sass という名前に変更する
+
+```bash
+mv ./app/assets/stylesheets/application.css{,.sass}
+```
+
+ファイル内に bootstrap を import する
+
+* app/assets/stylesheets/application.css.sass
+
+```sass
+ *= require_tree .
+ *= require_self
+ */
+
+@import bootstrap
+```
+
 ## 参考資料
 
 * [Ruby 入門](https://www.javadrive.jp/ruby/)
