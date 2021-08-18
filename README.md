@@ -1131,6 +1131,140 @@ html, body
 
 ![ユーザのリスト表示](./img/rails09.png)
 
+### Users#showを調整する
+
+* app/views/users/show.html.haml
+
+```haml
+.col-xs-8#users-content
+  .user-info
+    %span.user-name
+      = @user.name
+    %span.user-id
+      @#{@user.name}
+    .bio
+      = @user.bio
+```
+
+* app/assets/stylesheets/application.css.sass
+
+```sass
+@import bootstrap
+
+html, body
+  width: 100%
+  height: 100%
+
+#application
+  background-color: #f5f5f5
+
+.clear
+  clear: both
+
+#users-content
+  float: none
+  margin: 0 auto 35px
+  padding: 0px
+  background-color: #fff
+  border: 1px solid #ddd
+  border-radius: 6px
+  border-bottom-width: 3px
+  .list-group
+    margin-bottom: -1px
+    .list-group-item
+      border: none
+      border-bottom: 1px solid #ddd
+      margin-bottom: 0px
+      &:last-child
+      .user
+        .user-name
+          a
+            color: #555
+        .user-id
+          font-size: 14px
+          color: #aaa
+          font-weight: 400
+        .time
+          font-size: 12px
+          color: #aaa
+          font-weight: 400
+    .user-list
+      border-bottom-width: 2px
+      h2
+        font-size: 20px
+        margin: 0px
+  .user-info
+    padding: 20px 35px
+    .user-name
+      font-size: 28px
+      font-weight: 600
+    .user-id
+      font-size: 18px
+      color: #aaa
+    .bio
+      margin-top: 5px
+  .nav.nav-tabs
+    border-top: 1px solid #ddd
+    border-bottom: 2px solid #ddd
+    li
+      a
+        border: none
+        &:hover
+          background-color: #fff
+        .text
+        .num
+          font-size: 28px
+```
+
+![User#show の調整](./img/rails10.png)
+
+### ヘッダーのPartial(View)の書く
+
+* app/views/layouts/_header.html.haml
+
+```haml
+.navbar.navbar-default
+  .container
+    .navbar-header
+      = link_to '#Sample_app', root_url, class: "navbar-brand"
+    - if logged_in?
+      %ul.nav.navbar-nav
+        %li= link_to "ユーザー一覧", users_path
+      %ul.nav.navbar-nav.navbar-right
+        %li= link_to current_user.name, current_user
+        %li= link_to "ログアウト", sessions_path, method: :delete
+    - else
+      %ul.nav.navbar-nav.navbar-right
+        %li= link_to "会員登録", new_registrations_path
+        %li= link_to "ログイン", new_sessions_path
+```
+
+* app/views/layouts/application.html.erb
+
+```erb
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Sample_app</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_pack_tag 'application', 'data-turbolinks-track': 'reload' %>
+  </head>
+
+  <body id="application">
+    <div>
+      <%= render partial: "layouts/header" %>
+      <%= yield %>
+    </div>
+  </body>
+</html>
+```
+
+![ヘッダー追加](./img/rails11.png)
+
 ## 参考資料
 
 * [Ruby 入門](https://www.javadrive.jp/ruby/)
