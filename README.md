@@ -440,6 +440,292 @@ $ diff ./app/views/registrations/new.html.haml{.default,}
 
 ![入力フォームなどを追加](./img/rails04.png)
 
+### サインアップ機能(新規登録の実行)の実装
+
+Routing 定義
+
+サインアップ後に、トップページを表示するようにしたいので、root toで定義する
+
+* とりあえずここではこのページで定義しておいて、Tweet機能ができてタイムラインができてからそれに置き換える
+
+* config/routes.rb
+
+```rb
+Rails.application.routes.draw do
+  resource :registrations, only: [:new, :create]
+  root to: 'registrations#new'
+  # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
+end
+```
+
+Controller 定義
+
+* app/controllers/registrations_controller.rb
+
+```rb
+class RegistrationsController < ApplicationController
+  def new
+    @user = User.new
+  end
+
+  def create
+    @user = User.new(params_user)
+
+    if @user.save
+      redirect_to root_url
+    else
+      render :new
+    end
+  end
+
+  private
+
+  def params_user
+    params.require(:user).permit(:name, :email, :password, :password_confirmation)
+  end
+end
+```
+
+### 登録に失敗した際のエラーメッセージを表示
+
+* app/views/registrations/new.html.haml
+
+```haml
+%h1 Registrations#new
+%p Find me in app/views/registrations/new.html.haml
+
+- @user.errors.each do |attr, message|
+  .alert.alert-danger= message
+
+= form_for @user, url: registrations_path, method: :post do |f|
+  = f.label :name
+  = f.text_field :name
+  = f.label :email
+  = f.text_field :email
+  = f.label :password
+  = f.password_field :password
+  = f.label :password_confirmation
+  = f.password_field :password_confirmation
+  = f.submit
+```
+
+### デフォルトの言語を日本語に設定する
+
+* config/application.rb
+
+```rb
+require_relative "boot"
+
+require "rails/all"
+
+# Require the gems listed in Gemfile, including any gems
+# you've limited to :test, :development, or :production.
+Bundler.require(*Rails.groups)
+
+module SampleApp
+  class Application < Rails::Application
+    # Initialize configuration defaults for originally generated Rails version.
+    config.load_defaults 6.1
+
+    # Configuration for the application, engines, and railties goes here.
+    #
+    # These settings can be overridden in specific environments using the files
+    # in config/environments, which are processed later.
+    #
+    # config.time_zone = "Central Time (US & Canada)"
+    # config.eager_load_paths << Rails.root.join("extras")
+    config.i18n.default_locale = :ja
+    
+    config.sass.preferred_syntax = :sass
+  end
+end
+```
+
+### ロケールファイル追加
+
+各言語ごとの文章を定義しておくファイルをロケールファイルと呼ぶ
+
+config/locales/jp.yml を作成する
+
+```bash
+vi config/locales/jp.yml
+```
+
+* config/locales/jp.yml
+
+```yml
+ja:
+  activerecord:
+    errors:
+      models:
+```
+
+メッセージを定義する
+
+```yml
+ja:
+  activerecord:
+    errors:
+      models:
+        user:
+            attributes:
+              name:
+                blank: ユーザー名は空ではいけません
+                taken: ユーザー名は既に利用されています
+                invalid: ユーザー名には半角英数字のみ利用できます
+                too_long: ユーザー名は24文字まで利用できます
+                too_short: ユーザー名は最短で4文字必要です
+              email:
+                blank: メールアドレスが空です
+                taken: メールアドレスが既に使用済みです
+              password:
+                blank: パスワードが空です
+                too_long: パスワードは24文字以内で利用できます
+                too_short: パスワードは6文字以上で利用できます
+              password_confirmation:
+                blank: 確認用パスワードが空です
+                confirmation: 確認用パスワードが一致しません
+              bio:
+                too_long: プロフィールは200文字以内でなければなりません
+```
+
+### 背景画像の設定
+
+* app/views/layouts/registrations.html.haml
+
+ファイルを生成する
+
+```bash
+code app/views/layouts/registrations.html.haml
+```
+
+以下を追加する
+
+```haml
+!!!
+%html
+%head
+  %title Sample_app
+  = stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true
+  = javascript_pack_tag 'application', 'data-turbolinks-track' => true
+  = csrf_meta_tags
+%body#registrations
+  = yield
+```
+
+* app/assets/stylesheets/application.css.sass
+
+```sass
+ *= require_tree .
+ *= require_self
+ */
+@import bootstrap
+
+ 
+html, body
+  width: 100%
+  height: 100%
+ 
+.clear
+  clear: both
+```
+
+背景画像を app/assets/images/back.jpg に配置する
+
+```bash
+cp ../img/Hosei.png app/assets/images/back.jpg
+```
+
+```bash
+code app/assets/stylesheets/registrations.css.sass
+```
+
+* app/assets/stylesheets/registrations.css.sass
+
+```sass
+// Place all the styles related to the registrations controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+ 
+#registrations
+  background-image: asset-url("back.jpg")
+  background-position: center
+  background-size: cover
+  background-color: transparent
+  background-repeat: no-repeat
+  background-color: #050911
+  #registrations-new
+    width: 100%
+    height: 100%
+    .left-content
+      margin-top: 45px
+      padding: 0px 45px
+      color: #fff
+      h1
+        font-size: 50px
+        margin: 0px
+        margin-top: 10px
+      .ex
+        font-size: 18px
+        margin: 45px 0px
+    .right-content
+      padding: 0px 45px
+      form
+        margin: 45px 0px
+        padding: 30px 35px
+        border: 1px solid #fff
+        border-radius: 6px
+        background-color: rgba(0, 0, 0, 0.3)
+        color: #fff
+        h2
+          margin: 0px 0px 20px 0px
+          border-bottom: 1px solid rgba(255, 255, 255, 0.5)
+          padding-bottom: 10px
+          font-size: 20px
+        .control-label
+          font-weight: 400
+        .btn
+          width: 100%
+          padding: 12px
+          margin-top: 10px
+          margin-bottom: 10px
+          font-size: 16px
+```
+
+* app/views/registrations/new.html.haml
+
+```haml
+#registrations-new
+  .col-xs-6.left-content
+    %h1 #Sample_app
+    %p.ex
+      このサイトは、シラバスのRails学習コースの完成形サンプルアプリです。
+    %p.by
+      開発者: @null_point デザイン: @null_point 企画: @null_point
+  .col-xs-6.right-content
+    = form_for @user, url: registrations_path, method: :post do |f|
+      %h2
+        会員登録する
+      - @user.errors.each do |attr, message|
+        .alert.alert-danger= message
+      .form-group
+        = f.label :name, "ユーザーID: @@null_point_jp", class: "control-label"
+        = f.text_field :name, class: "form-control"
+      .form-group
+        = f.label :email,"メールアドレス: hello@@null_point.jp", class: "control-label"
+        = f.text_field :email, class: "form-control"
+      .form-group
+        = f.label :password, "パスワード: 6文字以上", class: "control-label"
+        = f.password_field :password, class: "form-control"
+      .form-group
+        = f.label :password_confirmation, "確認用パスワード: 6文字以上", class: "control-label"
+        = f.password_field :password_confirmation, class: "form-control"
+      = f.submit "登録する", class: "btn btn-primary"
+      .clear
+```
+
+![sass 反映](./img/rails05.png)
+
 ## 参考資料
 
 * [Ruby 入門](https://www.javadrive.jp/ruby/)
