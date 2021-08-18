@@ -1265,6 +1265,91 @@ html, body
 
 ![ヘッダー追加](./img/rails11.png)
 
+### プロフィール設定
+
+```bash
+rails g controller settings edit
+```
+
+Routing を定義する
+
+* config/routes.rb
+
+```rb
+Rails.application.routes.draw do
+  resource :registrations, only: [:new, :create]
+  resource :sessions, only: [:new, :create, :destroy]
+  resource :settings, only: [:edit, :update]
+  resources :users, only: [:index, :show]
+  
+  root to: 'registrations#new'
+  # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
+end
+```
+
+Controller を定義する
+
+* app/controllers/settings_controller.rb
+
+```rb
+class SettingsController < ApplicationController
+  def edit
+    @user = current_user
+  end
+
+   
+  def update
+    @user = current_user
+    @user.update_attributes(params_user)
+    redirect_to user_url(@user)
+  end
+
+  private
+
+  def params_user
+    params.require(:user).permit(:name, :screen_name, :bio)
+  end
+end
+```
+
+* View を定義する
+
+```haml
+%h1 Settings#edit
+%p Find me in app/views/settings/edit.html.haml
+
+= form_for @user, url: settings_path, method: :put do |f|
+  = f.label :name
+  = f.text_field :name
+  = f.label :screen_name
+  = f.text_field :screen_name
+  = f.label :bio
+  = f.text_area :bio
+  = f.submit
+```
+
+* app/views/layouts/_header.html.haml
+
+```haml
+.navbar.navbar-default
+  .container
+    .navbar-header
+      = link_to '#Sample_app', root_url, class: "navbar-brand"
+    - if logged_in?
+      %ul.nav.navbar-nav
+        %li= link_to "ユーザー一覧", users_path
+      %ul.nav.navbar-nav.navbar-right
+        %li= link_to current_user.name, current_user
+        %li= link_to "設定", edit_settings_path
+        %li= link_to "ログアウト", sessions_path, method: :delete
+    - else
+      %ul.nav.navbar-nav.navbar-right
+        %li= link_to "会員登録", new_registrations_path
+        %li= link_to "ログイン", new_sessions_path
+```
+
+![設定の表示](./img/rails12.png)
+
 ## 参考資料
 
 * [Ruby 入門](https://www.javadrive.jp/ruby/)
