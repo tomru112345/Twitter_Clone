@@ -39,6 +39,19 @@
     - [[TODO] Users#index, showをログインしていないと入れないようにする](#todo-usersindex-showをログインしていないと入れないようにする)
     - [noticeの表示](#noticeの表示)
     - [Sessions#new の notice](#sessionsnew-の-notice)
+    - [tweet 機能のコード生成](#tweet-機能のコード生成)
+    - [tweets テーブルにインデックスをはる](#tweets-テーブルにインデックスをはる)
+    - [ヘッダーに tweets#index へのリンクを置く](#ヘッダーに-tweetsindex-へのリンクを置く)
+    - [サインアップ後にログインするようにする](#サインアップ後にログインするようにする)
+    - [Route 定義の順序の変更](#route-定義の順序の変更)
+    - [Controller 変更](#controller-変更)
+    - [[TODO]ログインしていないと見れないようにする](#todoログインしていないと見れないようにする)
+    - [TweetモデルとUserモデルの関連付け(one to many関連)](#tweetモデルとuserモデルの関連付けone-to-many関連)
+    - [Tweet の Validation 定義](#tweet-の-validation-定義)
+    - [View(テンプレート)実装](#viewテンプレート実装)
+    - [つぶやきの作成時間を修整する](#つぶやきの作成時間を修整する)
+    - [ツイート一覧画面から、ツイートを投稿できるようにする](#ツイート一覧画面からツイートを投稿できるようにする)
+    - [投稿後は、ツイート一覧画面にリダイレクトする](#投稿後はツイート一覧画面にリダイレクトする)
 
 ## twitter クローン作成
 
@@ -1561,4 +1574,762 @@ end
       = f.submit "登録する", class: "btn btn-primary"
       = link_to "ログインする", new_sessions_path, class: "login pull-right"
       .clear
+```
+
+### tweet 機能のコード生成
+
+ツイート機能を書く。ここはscaffoldを利用する。
+
+```bash
+rails g scaffold tweet user_id:integer content:string --no-stylesheets
+```
+
+### tweets テーブルにインデックスをはる
+
+インデックスを追加して、読み取り、並べ替えを高速化する
+
+tweets テーブルは user_id から参照されることが考えられるので、DB にインデックスをはっておく
+
+* db/migrate/20210818142957_create_tweets.rb
+
+```rb
+class CreateTweets < ActiveRecord::Migration[6.1]
+  def change
+    create_table :tweets do |t|
+      t.integer :user_id
+      t.string :content
+
+      t.timestamps
+      
+      t.index :user_id
+      t.index :created_at
+    end
+  end
+end
+```
+
+```bash
+rake db:migrate
+```
+
+### ヘッダーに tweets#index へのリンクを置く
+
+* app/views/layouts/_header.html.haml
+
+```haml
+.navbar.navbar-default
+  .container
+    .navbar-header
+      = link_to '#Sample_app', root_url, class: "navbar-brand"
+    - if logged_in?
+      %ul.nav.navbar-nav
+        %li= link_to "全ツイート一覧", tweets_path
+        %li= link_to "ユーザー一覧", users_path
+      %ul.nav.navbar-nav.navbar-right
+        %li= link_to current_user.name, current_user
+        %li= link_to "設定", edit_settings_path
+        %li= link_to "ログアウト", sessions_path, method: :delete
+    - else
+      %ul.nav.navbar-nav.navbar-right
+        %li= link_to "会員登録", new_registrations_path
+        %li= link_to "ログイン", new_sessions_path
+```
+
+![全つぶやき一覧表示](./img/rails15.png)
+
+### サインアップ後にログインするようにする
+
+* app/controllers/registrations_controller.rb
+
+```rb
+class RegistrationsController < ApplicationController
+  def new
+    @user = User.new
+  end
+
+  def create
+    @user = User.new(params_user)
+
+    if @user.save
+      login(@user.email, @user.password)
+      redirect_to root_url
+    else
+      render :new
+    end
+  end
+
+  private
+
+  def params_user
+    params.require(:user).permit(:name, :email, :password, :password_confirmation)
+  end
+end
+```
+
+### Route 定義の順序の変更
+
+* config/routes.rb
+
+```rb
+Rails.application.routes.draw do
+  resource :registrations, only: [:new, :create]
+  resource :sessions, only: [:new, :create, :destroy]
+  resource :settings, only: [:edit, :update]
+  resources :users, only: [:index, :show]
+
+  resources :tweets
+  
+  root to: 'registrations#new'
+  # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
+end
+```
+
+### Controller 変更
+
+scaffold で生成されたコードから変更を加える。
+
+Tweet は必ず user と関連付けられていなければならない、というバリデーションを書いたので、user に current_user をセットする。
+
+また、クライアントから送られてくるパラメーターのうち、user_id は current_user から取ってこれるので、こちらは不要になる。
+
+* app/controllers/tweets_controller.rb
+
+```rb
+class TweetsController < ApplicationController
+  before_action :set_tweet, only: %i[ show edit update destroy ]
+
+  # GET /tweets or /tweets.json
+  def index
+    @tweets = Tweet.all
+  end
+
+  # GET /tweets/1 or /tweets/1.json
+  def show
+  end
+
+  # GET /tweets/new
+  def new
+    @tweet = Tweet.new
+  end
+
+  # GET /tweets/1/edit
+  def edit
+  end
+
+  # POST /tweets or /tweets.json
+  def create
+    @tweet = Tweet.new(tweet_params)
+    @tweet.user = current_user
+
+    respond_to do |format|
+      if @tweet.save
+        format.html { redirect_to @tweet, notice: "Tweet was successfully created." }
+        format.json { render :show, status: :created, location: @tweet }
+      else
+        format.html { render :new, status: :unprocessable_entity }
+        format.json { render json: @tweet.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+
+  # PATCH/PUT /tweets/1 or /tweets/1.json
+  def update
+    respond_to do |format|
+      if @tweet.update(tweet_params)
+        format.html { redirect_to @tweet, notice: "Tweet was successfully updated." }
+        format.json { render :show, status: :ok, location: @tweet }
+      else
+        format.html { render :edit, status: :unprocessable_entity }
+        format.json { render json: @tweet.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+
+  # DELETE /tweets/1 or /tweets/1.json
+  def destroy
+    @tweet.destroy
+    respond_to do |format|
+      format.html { redirect_to tweets_url, notice: "Tweet was successfully destroyed." }
+      format.json { head :no_content }
+    end
+  end
+
+  private
+    # Use callbacks to share common setup or constraints between actions.
+    def set_tweet
+      @tweet = Tweet.find(params[:id])
+    end
+
+    # Only allow a list of trusted parameters through.
+    def tweet_params
+      params.require(:tweet).permit(:content)
+    end
+end
+```
+
+### [TODO]ログインしていないと見れないようにする
+
+ログインしていないと見れないようにする
+
+* index (全ツイート一覧画面) はログインしていなくても見れるようにしたい
+  * except オプションで指定する
+
+* app/controllers/tweets_controller.rb
+
+```rb
+class TweetsController < ApplicationController
+  before_filter :require_login, except: [:index]
+  before_action :set_tweet, only: %i[ show edit update destroy ]
+
+  # GET /tweets or /tweets.json
+  def index
+    @tweets = Tweet.all
+  end
+```
+
+### TweetモデルとUserモデルの関連付け(one to many関連)
+
+* app/models/tweet.rb
+
+```rb
+class Tweet < ApplicationRecord
+    belongs_to :user
+end
+```
+
+* app/models/user.rb
+
+```rb
+class User < ApplicationRecord
+  authenticates_with_sorcery!
+
+  has_many :tweets, dependent: :destroy
+  
+  validates :name, presence: true, uniqueness: { case_sensitive: false }, format: { with: /\A[a-z][a-z0-9]+\z/ }, length: { in: 4..24 }
+  validates :screen_name, length: { maximum: 140 }
+  validates :bio, length: { maximum: 200  }
+  validates :email, presence: true, uniqueness: { case_sensitive: false }
+  validates :password, confirmation: true, length: { in: 6..24 }, if: :password
+  validates :password_confirmation, presence: true, if: :password
+end
+```
+
+### Tweet の Validation 定義
+
+* app/models/tweet.rb
+
+```rb
+class Tweet < ApplicationRecord
+    belongs_to :user
+
+    validates :user, presence: true
+	validates :content, presence: true, length: { in: 1..140}
+end
+```
+
+### View(テンプレート)実装
+
+* app/views/tweets/index.html.haml
+
+```haml
+#tweets-content
+  .container
+    .row
+      .col-xs-4.left-content
+        - if logged_in?
+          .panel.panel-default
+            .panel-body
+              = link_to user_path(current_user), class: "user" do
+                %span.user-name
+                  = render_user_screen_name current_user
+                %span.user-id
+                  @#{current_user.name}
+              .user-activity
+                .row
+                  .col-xs-4.tweets-num
+                    .text
+                      つぶやき
+                    .num
+                      = link_to current_user.tweets.count, user_path(current_user)
+                  .col-xs-4.follow-num
+                    .text
+                      フォロー
+                    .num
+                      0
+                  .col-xs-4.follower-num
+                    .text
+                      フォロワー
+                    .num
+                      0
+      .col-xs-8.right-content
+        .list-group
+          = div_for @tweets, class: "list-group-item" do |t|
+            %h4.user
+              %span.user-name
+                = link_to render_user_screen_name(t.user), user_path(t.user)
+              %span.user-id
+                @#{t.user.name}
+              %span.time.pull-right
+                = distance_of_time_in_words_to_now(t.created_at)
+              .clear
+            .tweet-content
+              %p
+                = t.content
+```
+
+![tweet の数表示](./img/rails16.png)
+
+### つぶやきの作成時間を修整する
+
+* config/locales/jp.yml
+
+```yml
+   date:
+     abbr_day_names:
+     - 日
+     - 月
+     - 火
+     - 水
+     - 木
+     - 金
+     - 土
+     abbr_month_names:
+     -
+     - 1月
+     - 2月
+     - 3月
+     - 4月
+     - 5月
+     - 6月
+     - 7月
+     - 8月
+     - 9月
+     - 10月
+     - 11月
+     - 12月
+     day_names:
+     - 日曜日
+     - 月曜日
+     - 火曜日
+     - 水曜日
+     - 木曜日
+     - 金曜日
+     - 土曜日
+     formats:
+       default: ! '%Y/%m/%d'
+       long: ! '%Y年%m月%d日(%a)'
+       short: ! '%m/%d'
+     month_names:
+     -
+     - 1月
+     - 2月
+     - 3月
+     - 4月
+     - 5月
+     - 6月
+     - 7月
+     - 8月
+     - 9月
+     - 10月
+     - 11月
+     - 12月
+     order:
+     - :year
+     - :month
+     - :day
+   datetime:
+     distance_in_words:
+       about_x_hours:
+         one: 約1時間
+         other: 約%{count}時間
+       about_x_months:
+         one: 約1ヶ月
+         other: 約%{count}ヶ月
+       about_x_years:
+         one: 約1年
+         other: 約%{count}年
+       almost_x_years:
+         one: 1年弱
+         other: ! '%{count}年弱'
+       half_a_minute: 30秒前後
+       less_than_x_minutes:
+         one: 1分以内
+         other: ! '%{count}分未満'
+       less_than_x_seconds:
+         one: 1秒以内
+         other: ! '%{count}秒未満'
+       over_x_years:
+         one: 1年以上
+         other: ! '%{count}年以上'
+       x_days:
+         one: 1日
+         other: ! '%{count}日'
+       x_minutes:
+         one: 1分
+         other: ! '%{count}分'
+       x_months:
+         one: 1ヶ月
+         other: ! '%{count}ヶ月'
+       x_seconds:
+         one: 1秒
+         other: ! '%{count}秒'
+     prompts:
+       day: 日
+       hour: 時
+       minute: 分
+       month: 月
+       second: 秒
+       year: 年
+   errors:
+     format: ! '%{attribute}%{message}'
+     messages:
+       accepted: を受諾してください。
+       blank: を入力してください。
+       present: は入力しないでください。
+       confirmation: と%{attribute}の入力が一致しません。
+       empty: を入力してください。
+       equal_to: は%{count}にしてください。
+       even: は偶数にしてください。
+       exclusion: は予約されています。
+       greater_than: は%{count}より大きい値にしてください。
+       greater_than_or_equal_to: は%{count}以上の値にしてください。
+       inclusion: は一覧にありません。
+       invalid: は不正な値です。
+       less_than: は%{count}より小さい値にしてください。
+       less_than_or_equal_to: は%{count}以下の値にしてください。
+       not_a_number: は数値で入力してください。
+       not_an_integer: は整数で入力してください。
+       odd: は奇数にしてください。
+       record_invalid: バリデーションに失敗しました。 %{errors}
+       restrict_dependent_destroy: ! '%{record}が存在しているので削除できません。'
+       taken: はすでに存在します。
+       too_long: は%{count}文字以内で入力してください。
+       too_short: は%{count}文字以上で入力してください。
+       wrong_length: は%{count}文字で入力してください。
+       other_than: "は%{count}以外の値にしてください。"
+     template:
+       body: 次の項目を確認してください。
+       header:
+         one: ! '%{model}にエラーが発生しました。'
+         other: ! '%{model}に%{count}個のエラーが発生しました。'
+   helpers:
+     select:
+       prompt: 選択してください。
+     submit:
+       create: 登録する
+       submit: 保存する
+       update: 更新する
+   number:
+     currency:
+       format:
+         delimiter: ! ','
+         format: ! '%n%u'
+         precision: 0
+         separator: .
+         significant: false
+         strip_insignificant_zeros: false
+         unit: 円
+     format:
+       delimiter: ! ','
+       precision: 3
+       separator: .
+       significant: false
+       strip_insignificant_zeros: false
+     human:
+       decimal_units:
+         format: ! '%n %u'
+         units:
+           billion: 十億
+           million: 百万
+           quadrillion: 千兆
+           thousand: 千
+           trillion: 兆
+           unit: ''
+       format:
+         delimiter: ''
+         precision: 3
+         significant: true
+         strip_insignificant_zeros: true
+       storage_units:
+         format: ! '%n%u'
+         units:
+           byte: バイト
+           gb: ギガバイト
+           kb: キロバイト
+           mb: メガバイト
+           tb: テラバイト
+     percentage:
+       format:
+         delimiter: ''
+         format: "%n%"
+     precision:
+       format:
+         delimiter: ''
+   support:
+     array:
+       last_word_connector: と
+       two_words_connector: と
+       words_connector: と
+   time:
+     am: 午前
+     formats:
+       default: ! '%Y/%m/%d %H:%M:%S'
+       long: ! '%Y年%m月%d日(%a) %H時%M分%S秒 %z'
+       short: ! '%y/%m/%d %H:%M'
+     pm: 午後
+```
+
+### ツイート一覧画面から、ツイートを投稿できるようにする
+
+* app/controllers/tweets_controller.rb
+
+```rb
+class TweetsController < ApplicationController
+  #before_filter :require_login, except: [:index]
+  before_action :set_tweet, only: %i[ show edit update destroy ]
+
+  # GET /tweets or /tweets.json
+  def index
+    @tweets = Tweet.all
+    @tweet  = Tweet.new
+  end
+```
+
+* app/views/tweets/index.html.haml
+
+```haml
+#tweets-content
+  .container
+    .row
+      .col-xs-4.left-content
+        - if logged_in?
+          .panel.panel-default
+            .panel-body
+              = link_to user_path(current_user), class: "user" do
+                %span.user-name
+                  = render_user_screen_name current_user
+                %span.user-id
+                  @#{current_user.name}
+              .user-activity
+                .row
+                  .col-xs-4.tweets-num
+                    .text
+                      つぶやき
+                    .num
+                      = link_to current_user.tweets.count, user_path(current_user)
+                  .col-xs-4.follow-num
+                    .text
+                      フォロー
+                    .num
+                      0
+                  .col-xs-4.follower-num
+                    .text
+                      フォロワー
+                    .num
+                      0
+              = form_for @tweet do |f|
+                  .form-group
+                    = f.text_area :content, class: "form-control"
+                  = f.submit "つぶやく", class: "btn btn-success"
+      .col-xs-8.right-content
+        .list-group
+          = div_for @tweets, class: "list-group-item" do |t|
+            %h4.user
+              %span.user-name
+                = link_to render_user_screen_name(t.user), user_path(t.user)
+              %span.user-id
+                @#{t.user.name}
+              %span.time.pull-right
+                = distance_of_time_in_words_to_now(t.created_at)
+              .clear
+            .tweet-content
+              %p
+                = t.content
+```
+
+![ツイートできた!](./img/rails18.png)
+
+* app/assets/stylesheets/application.css.sass
+
+```sass
+/*
+ * This is a manifest file that'll be compiled into application.css, which will include all the files
+ * listed below.
+ *
+ * Any CSS and SCSS file within this directory, lib/assets/stylesheets, vendor/assets/stylesheets,
+ * or vendor/assets/stylesheets of plugins, if any, can be referenced here using a relative path.
+ *
+ * You're free to add application-wide styles to this file and they'll appear at the bottom of the
+ * compiled file so the styles you add here take precedence over styles defined in any styles
+ * defined in the other CSS/SCSS files in this directory. It is generally better to create a new
+ * file per style scope.
+ *
+ *= require_tree .
+ *= require_self
+ */
+
+@import bootstrap
+
+html, body
+  width: 100%
+  height: 100%
+
+#application
+  background-color: #f5f5f5
+
+.clear
+  clear: both
+
+#users-content
+  float: none
+  margin: 0 auto 35px
+  padding: 0px
+  background-color: #fff
+  border: 1px solid #ddd
+  border-radius: 6px
+  border-bottom-width: 3px
+  .list-group
+    margin-bottom: -1px
+    .list-group-item
+      border: none
+      border-bottom: 1px solid #ddd
+      margin-bottom: 0px
+      &:last-child
+      .user
+        .user-name
+          a
+            color: #555
+        .user-id
+          font-size: 14px
+          color: #aaa
+          font-weight: 400
+        .time
+          font-size: 12px
+          color: #aaa
+          font-weight: 400
+    .user-list
+      border-bottom-width: 2px
+      h2
+        font-size: 20px
+        margin: 0px
+  .user-info
+    padding: 20px 35px
+    .user-name
+      font-size: 28px
+      font-weight: 600
+    .user-id
+      font-size: 18px
+      color: #aaa
+    .bio
+      margin-top: 5px
+  .nav.nav-tabs
+    border-top: 1px solid #ddd
+    border-bottom: 2px solid #ddd
+    li
+      a
+        border: none
+        &:hover
+          background-color: #fff
+        .text
+        .num
+          font-size: 28px
+
+#tweets-content
+  .left-content
+    .panel
+      box-shadow: none
+      border-bottom-width: 3px
+      .user
+        .user-name
+          font-size: 20px
+          font-weight: 600
+          color: #555
+        .user-id
+          color: #aaa
+        &:hover
+          text-decoration: none
+          border-bottom: 1px solid #555
+      .user-activity
+        text-align: center
+        .row
+          border-bottom: 1px solid #ddd
+          padding: 10px 0px
+          .text
+            font-size: 12px
+            color: #777
+          .num
+            font-size: 18px
+      .new_tweet
+        margin-top: 20px
+        textarea
+          width: 100% !important
+        .btn
+          width: 100%
+  .right-content
+    .list-group-item:last-child
+      border-bottom-width: 3px
+    .list-group-item
+      .user
+        .user-name
+          a
+            color: #555
+        .user-id
+          font-size: 14px
+          color: #aaa
+          font-weight: 400
+        .time
+          font-size: 12px
+          color: #aaa
+          font-weight: 400
+      .tweet-content
+        font-size: 16px
+        .content-footer
+          a
+            font-size: 12px
+            margin-right: 10px
+```
+
+### 投稿後は、ツイート一覧画面にリダイレクトする
+
+* app/controllers/tweets_controller.rb
+
+```rb
+class TweetsController < ApplicationController
+  #before_filter :require_login, except: [:index]
+  before_action :set_tweet, only: %i[ show edit update destroy ]
+
+  # GET /tweets or /tweets.json
+  def index
+    @tweets = Tweet.all
+    @tweet  = Tweet.new
+  end
+
+  # GET /tweets/1 or /tweets/1.json
+  def show
+  end
+
+  # GET /tweets/new
+  def new
+    @tweet = Tweet.new
+  end
+
+  # GET /tweets/1/edit
+  def edit
+  end
+
+  # POST /tweets or /tweets.json
+  def create
+    @tweet = Tweet.new(tweet_params)
+    @tweet.user = current_user
+
+    respond_to do |format|
+      if @tweet.save
+        format.html { redirect_to tweets_url, notice: 'Tweet was successfully created.' }
+        format.json { render :show, status: :created, location: @tweet }
+      else
+        format.html { render :new, status: :unprocessable_entity }
+        format.json { render json: @tweet.errors, status: :unprocessable_entity }
+      end
+    end
+  end
 ```
