@@ -175,6 +175,7 @@ Gemfile に以下の欄を追加
 gem 'sorcery'
 gem 'haml-rails'
 gem 'bootstrap-sass'
+gem 'record_tag_helper'
 ```
 
 インストールする
@@ -936,6 +937,199 @@ View (レイアウト)定義
 ```
 
 ![ログイン画面表示](./img/rails07.png)
+
+### ユーザー一覧とプロフィール
+
+scaffold コマンドなので Model, View, Controller をそれぞれ自動で生成する
+
+* サインアップ・サインイン機能を作るときにユーザーを表す Model はすでに作成されており、勝手に上書きされては困る
+
+```bash
+rails g scaffold user -s --no-stylesheets --skip-migration --skip-collision-check
+```
+
+Routing 定義
+
+* config/routes.rb
+
+```rb
+resource :registrations, only: [:new, :create]
+resource :sessions, only: [:new, :create, :destroy]
+resources :users, only: [:index, :show]
+```
+
+Controller (アクション)定義
+
+* app/controllers/users_controller.rb
+
+```rb
+class UsersController < ApplicationController
+  #before_action :set_user, only: %i[ show edit update destroy ]
+
+  # GET /users or /users.json
+  def index
+    @users = User.all
+  end
+
+  # GET /users/1 or /users/1.json
+  def show
+    @user = User.find(params[:id])
+  end
+
+  # GET /users/new
+  def new
+    @user = User.new
+  end
+
+  # GET /users/1/edit
+  def edit
+  end
+
+  # POST /users or /users.json
+  def create
+    @user = User.new(user_params)
+
+    respond_to do |format|
+      if @user.save
+        format.html { redirect_to @user, notice: "User was successfully created." }
+        format.json { render :show, status: :created, location: @user }
+      else
+        format.html { render :new, status: :unprocessable_entity }
+        format.json { render json: @user.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+
+  # PATCH/PUT /users/1 or /users/1.json
+  def update
+    respond_to do |format|
+      if @user.update(user_params)
+        format.html { redirect_to @user, notice: "User was successfully updated." }
+        format.json { render :show, status: :ok, location: @user }
+      else
+        format.html { render :edit, status: :unprocessable_entity }
+        format.json { render json: @user.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+
+  # DELETE /users/1 or /users/1.json
+  def destroy
+    @user.destroy
+    respond_to do |format|
+      format.html { redirect_to users_url, notice: "User was successfully destroyed." }
+      format.json { head :no_content }
+    end
+  end
+
+  private
+    # Use callbacks to share common setup or constraints between actions.
+    def set_user
+      @user = User.find(params[:id])
+    end
+
+    # Only allow a list of trusted parameters through.
+    def user_params
+      params.fetch(:user, {})
+    end
+end
+```
+
+### Users#index の Template(View) を書く
+
+* app/views/users/index.html.haml
+
+```haml
+%h1 Listing users
+
+%table
+  %tr
+    %th
+
+  - @users.each do |user|
+    %tr
+      %td= link_to user.name, user
+```
+
+![ユーザ登録一覧表示](./img/rails08.png)
+
+### Users#showのTemplate(View)を書く
+
+* app/views/users/show.html.haml
+
+```haml
+%p#notice= notice
+
+= link_to 'Back', users_path
+```
+
+### Users#indexを調整する
+
+* app/assets/stylesheets/application.css.sass
+
+```sass
+@import bootstrap
+
+ 
+html, body
+  width: 100%
+  height: 100%
+ 
+.clear
+  clear: both
+
+#users-content
+  float: none
+  margin: 0 auto 35px
+  padding: 0px
+  background-color: #fff
+  border: 1px solid #ddd
+  border-radius: 6px
+  border-bottom-width: 3px
+  .list-group
+    margin-bottom: -1px
+    .list-group-item
+      border: none
+      border-bottom: 1px solid #ddd
+      margin-bottom: 0px
+      &:last-child
+      .user
+        .user-name
+          a
+            color: #555
+        .user-id
+          font-size: 14px
+          color: #aaa
+          font-weight: 400
+        .time
+          font-size: 12px
+          color: #aaa
+          font-weight: 400
+    .user-list
+      border-bottom-width: 2px
+      h2
+        font-size: 20px
+        margin: 0px
+```
+
+* app/views/users/index.html.haml
+
+```haml
+.col-xs-8#users-content
+  .list-group
+    .list-group-item.user-list
+      %h2 ユーザー一覧
+    = div_for @users, class: "list-group-item" do |u|
+      %h4.user
+        %span.user-name
+          = link_to u.name, user_path(u)
+        %span.user-id
+          @#{u.name}
+      .bio
+        = u.bio
+```
+
+![ユーザのリスト表示](./img/rails09.png)
 
 ## 参考資料
 
