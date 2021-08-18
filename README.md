@@ -804,6 +804,139 @@ View (テンプレート)実装
 
 ![ログイン画面追加](./img/rails06.png)
 
+### ログイン機能(ログイン処理)の実装
+
+* app/controllers/sessions_controller.rb
+
+```rb
+class SessionsController < ApplicationController
+  def new
+    @user = User.new
+  end
+
+  def create
+    email    = params_user[:email]
+    password = params_user[:password]
+
+    if login(email, password)
+      redirect_to root_url, notice: "successfully logged in."
+    else
+      @user = User.new(email: email)
+      render :new
+    end
+  end
+
+  private
+
+  def params_user
+    params.require(:user).permit(:email, :password)
+  end
+end
+```
+
+### ログイン失敗時のエラーメッセージ表示
+
+* app/views/sessions/new.html.haml
+
+```haml
+%h1 Sessions#new
+%p Find me in app/views/sessions/new.html.haml
+
+- if action_name == "create"
+  .alert.alert-danger
+    メールアドレスまたはパスワードが正しくありません。
+
+= form_for @user, url: sessions_path, method: :post do |f|
+  = f.label :email
+  = f.text_field :email
+  = f.label :password
+  = f.password_field :password
+  = f.submit
+```
+
+View (レイアウト)定義
+
+* app/views/layouts/sessions.html.haml
+
+```haml
+!!!
+%html
+%head
+  %title Sample_appSession
+  = stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true
+  = javascript_include_tag 'application', 'data-turbolinks-track' => true
+  = csrf_meta_tags
+%body#sessions
+  = yield
+```
+
+* app/assets/stylesheets/sessions.css.sass
+
+```sass
+// Place all the styles related to the sessions controller here.
+// They will automatically be included in application.css.
+// You can use Sass here: https://sass-lang.com/
+
+#sessions
+  display: table
+  widows: 100%
+  height: 100%
+  background-color: #f5f5f5
+  #sessions-new
+    display: table-cell
+    vertical-align: middle
+    .login-content
+      margin: 0 auto
+      float: none
+      form
+        border: 1px solid #ddd
+        border-bottom-width: 3px
+        border-radius: 6px
+        background-color: #fff
+        h2
+          margin: 0px
+          padding: 12px
+          text-align: center
+          border-bottom: 2px solid #ddd
+          font-size: 18px
+          font-weight: 600
+        .form-body
+          padding: 25px 30px
+          .control-label
+            font-weight: 400
+          .btn
+            width: 100%
+            margin: 10px 0px
+          .signup
+            text-decoration: underline
+```
+
+* app/views/sessions/new.html.haml
+
+```haml
+#sessions-new
+  .col-xs-5.login-content
+    - if action_name == "create"
+      .alert.alert-danger
+        メールアドレスまたはパスワードが正しくありません。
+    = form_for @user, url: sessions_path, method: :post do |f|
+      %h2
+        ログイン
+      .form-body
+        .form-group
+          = f.label :email,"メールアドレス：hello@null_point.jp", class: "control-label"
+          = f.text_field :email, class: "form-control"
+        .form-group
+          = f.label :password, "パスワード：6文字以上", class: "control-label"
+          = f.password_field :password, class: "form-control"
+        = f.submit "ログイン", class: "btn btn-success"
+        = link_to root_path, class: "pull-right signup" do
+          会員登録する
+        .clear
+```
+
+![ログイン画面表示](./img/rails07.png)
+
 ## 参考資料
 
 * [Ruby 入門](https://www.javadrive.jp/ruby/)
