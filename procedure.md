@@ -36,7 +36,7 @@
     - [Settings#editのスタイル設定](#settingseditのスタイル設定)
     - [validation の設定](#validation-の設定)
     - [ログアウト機能](#ログアウト機能)
-    - [[TODO] Users#index, showをログインしていないと入れないようにする](#todo-usersindex-showをログインしていないと入れないようにする)
+    - [Users#index, showをログインしていないと入れないようにする](#usersindex-showをログインしていないと入れないようにする)
     - [noticeの表示](#noticeの表示)
     - [Sessions#new の notice](#sessionsnew-の-notice)
     - [tweet 機能のコード生成](#tweet-機能のコード生成)
@@ -45,13 +45,19 @@
     - [サインアップ後にログインするようにする](#サインアップ後にログインするようにする)
     - [Route 定義の順序の変更](#route-定義の順序の変更)
     - [Controller 変更](#controller-変更)
-    - [[TODO]ログインしていないと見れないようにする](#todoログインしていないと見れないようにする)
+    - [ログインしていないと見れないようにする](#ログインしていないと見れないようにする)
     - [TweetモデルとUserモデルの関連付け(one to many関連)](#tweetモデルとuserモデルの関連付けone-to-many関連)
     - [Tweet の Validation 定義](#tweet-の-validation-定義)
     - [View(テンプレート)実装](#viewテンプレート実装)
     - [つぶやきの作成時間を修整する](#つぶやきの作成時間を修整する)
     - [ツイート一覧画面から、ツイートを投稿できるようにする](#ツイート一覧画面からツイートを投稿できるようにする)
     - [投稿後は、ツイート一覧画面にリダイレクトする](#投稿後はツイート一覧画面にリダイレクトする)
+    - [ツイート投稿失敗した場合のメッセージ表示](#ツイート投稿失敗した場合のメッセージ表示)
+    - [Tweetを新しい順で並べ替える](#tweetを新しい順で並べ替える)
+    - [Users#showの内容を調整](#usersshowの内容を調整)
+    - [ログインしている場合はタイムラインを表示する](#ログインしている場合はタイムラインを表示する)
+    - [会員登録後タイムラインを表示](#会員登録後タイムラインを表示)
+    - [ログイン後タイムラインを表示](#ログイン後タイムラインを表示)
 
 ## twitter クローン作成
 
@@ -1439,13 +1445,13 @@ class SessionsController < ApplicationController
 end
 ```
 
-### [TODO] Users#index, showをログインしていないと入れないようにする
+### Users#index, showをログインしていないと入れないようにする
 
 * app/controllers/users_controller.rb
 
 ```rb
 class UsersController < ApplicationController
-  #before_action :set_user, only: %i[ show edit update destroy ]
+  before_action :set_user, only: %i[ show edit update destroy ]
   before_filter :require_login
   # GET /users or /users.json
   def index
@@ -1767,7 +1773,7 @@ class TweetsController < ApplicationController
 end
 ```
 
-### [TODO]ログインしていないと見れないようにする
+### ログインしていないと見れないようにする
 
 ログインしていないと見れないようにする
 
@@ -1778,7 +1784,7 @@ end
 
 ```rb
 class TweetsController < ApplicationController
-  before_filter :require_login, except: [:index]
+  before_action :require_login, except: [:index]
   before_action :set_tweet, only: %i[ show edit update destroy ]
 
   # GET /tweets or /tweets.json
@@ -2332,4 +2338,356 @@ class TweetsController < ApplicationController
       end
     end
   end
+```
+
+### ツイート投稿失敗した場合のメッセージ表示
+
+```rb
+class TweetsController < ApplicationController
+  #before_filter :require_login, except: [:index]
+  before_action :set_tweet, only: %i[ show edit update destroy ]
+
+  # GET /tweets or /tweets.json
+  def index
+    @tweets = Tweet.all
+    @tweet  = Tweet.new
+  end
+
+  # GET /tweets/1 or /tweets/1.json
+  def show
+  end
+
+  # GET /tweets/new
+  def new
+    @tweet = Tweet.new
+  end
+
+  # GET /tweets/1/edit
+  def edit
+  end
+
+  # POST /tweets or /tweets.json
+  def create
+    @tweet = Tweet.new(tweet_params)
+    @tweet.user = current_user
+
+    respond_to do |format|
+      if @tweet.save
+        format.html { redirect_to tweets_url, notice: 'Tweet was successfully created.' }
+        format.json { render :show, status: :created, location: @tweet }
+      else
+        @tweets = Tweet.all
+        format.html { render :index }
+        format.json { render json: @tweet.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+```
+
+* app/views/tweets/index.html.haml
+
+```haml
+#tweets-content
+  .container
+    .row
+      .col-xs-4.left-content
+        - if logged_in?
+          .panel.panel-default
+            .panel-body
+              = link_to user_path(current_user), class: "user" do
+                %span.user-name
+                  = render_user_screen_name current_user
+                %span.user-id
+                  @#{current_user.name}
+              .user-activity
+                .row
+                  .col-xs-4.tweets-num
+                    .text
+                      つぶやき
+                    .num
+                      = link_to current_user.tweets.count, user_path(current_user)
+                  .col-xs-4.follow-num
+                    .text
+                      フォロー
+                    .num
+                      0
+                  .col-xs-4.follower-num
+                    .text
+                      フォロワー
+                    .num
+                      0
+              - @tweet.errors.full_messages.each do |message|
+                .alert.alert-danger= message
+              = form_for @tweet do |f|
+                .form-group
+                  = f.text_area :content, class: "form-control"
+                = f.submit "つぶやく", class: "btn btn-success"
+      .col-xs-8.right-content
+        .list-group
+          = div_for @tweets, class: "list-group-item" do |t|
+            %h4.user
+              %span.user-name
+                = link_to render_user_screen_name(t.user), user_path(t.user)
+              %span.user-id
+                @#{t.user.name}
+              %span.time.pull-right
+                = distance_of_time_in_words_to_now(t.created_at)
+              .clear
+            .tweet-content
+              %p
+                = t.content
+```
+
+### Tweetを新しい順で並べ替える
+
+* app/models/tweet.rb
+
+```rb
+class Tweet < ApplicationRecord
+    belongs_to :user
+
+    validates :user, presence: true
+	validates :content, presence: true, length: { in: 1..140}
+
+    default_scope -> { order(created_at: :desc) }
+end
+```
+
+* app/views/tweets/index.html.haml
+
+```haml
+#tweets-content
+  .container
+    .row
+      .col-xs-4.left-content
+        - if logged_in?
+          .panel.panel-default
+            .panel-body
+              = link_to user_path(current_user), class: "user" do
+                %span.user-name
+                  = render_user_screen_name current_user
+                %span.user-id
+                  @#{current_user.name}
+              .user-activity
+                .row
+                  .col-xs-4.tweets-num
+                    .text
+                      つぶやき
+                    .num
+                      = link_to current_user.tweets.count, user_path(current_user)
+                  .col-xs-4.follow-num
+                    .text
+                      フォロー
+                    .num
+                      0
+                  .col-xs-4.follower-num
+                    .text
+                      フォロワー
+                    .num
+                      0
+              - @tweet.errors.full_messages.each do |message|
+                .alert.alert-danger= message
+              = form_for @tweet do |f|
+                .form-group
+                  = f.text_area :content, class: "form-control"
+                = f.submit "つぶやく", class: "btn btn-success"
+      .col-xs-8.right-content
+        - if notice
+          .alert.alert-info= notice
+        .list-group
+          = div_for @tweets, class: "list-group-item" do |t|
+            %h4.user
+              %span.user-name
+                = link_to render_user_screen_name(t.user), user_path(t.user)
+              %span.user-id
+                @#{t.user.name}
+              %span.time.pull-right
+                = distance_of_time_in_words_to_now(t.created_at)
+              .clear
+            .tweet-content
+              %p
+                = t.content
+```
+
+![最新順ツイート表示](./img/rails19.png)
+
+### Users#showの内容を調整
+
+```haml
+      @#{@user.name}
+    .bio
+      = @user.bio
+
+  %ul.nav.nav-tabs.nav-justified
+    %li.active
+      = link_to user_path(@user) do
+        .text
+          つぶやき
+        .num
+          #{@user.tweets.count}
+    %li
+      = link_to nil do
+        .text
+          フォロー
+        .num
+          0
+    %li
+      = link_to nil do
+        .text
+          フォロワー
+        .num
+          0
+    %li
+      = link_to nil do
+        .text
+          お気に入り
+        .num
+          0
+
+  .list-group
+    - if @user.tweets.empty?
+      .list-group-item
+        まだツイートはありません
+    = div_for @user.tweets, class: "list-group-item" do |t|
+      %h4.user
+        %span.user-name
+          = link_to t.user.name, user_path(t.user)
+        %span.user-id
+          @#{t.user.name}
+        %span.time.pull-right
+          = distance_of_time_in_words_to_now(t.created_at)
+        .clear
+      .tweet-content
+        %p
+          = t.content
+```
+
+![プロフィールにツイート表示](./img/rails20.png)
+
+### ログインしている場合はタイムラインを表示する
+
+* app/controllers/registrations_controller.rb
+
+```rb
+class RegistrationsController < ApplicationController
+  def new
+    @user = User.new
+    redirect_to tweets_url if logged_in?
+  end
+
+  def create
+    @user = User.new(params_user)
+
+    if @user.save
+      login(@user.email, @user.password)
+      redirect_to root_url
+    else
+      render :new
+    end
+  end
+
+  private
+
+  def params_user
+    params.require(:user).permit(:name, :email, :password, :password_confirmation)
+  end
+end
+```
+
+* app/controllers/sessions_controller.rb
+
+```rb
+class SessionsController < ApplicationController
+  def new
+    @user = User.new
+    redirect_to tweets_url if logged_in?
+  end
+
+  def create
+    email    = params_user[:email]
+    password = params_user[:password]
+
+    if login(email, password)
+      redirect_to root_url, notice: "サインインしました"
+    else
+      @user = User.new(email: email)
+      render :new
+    end
+  end
+
+  def destroy
+    logout
+    redirect_to root_url, notice: "サインアウトしました"
+  end
+
+  private
+
+  def params_user
+    params.require(:user).permit(:email, :password)
+  end
+end
+```
+
+### 会員登録後タイムラインを表示
+
+* app/controllers/registrations_controller.rb
+
+```rb
+class RegistrationsController < ApplicationController
+  def new
+    @user = User.new
+    redirect_to tweets_url if logged_in?
+  end
+
+  def create
+    @user = User.new(params_user)
+
+    if @user.save
+      login(@user.email, @user.password)
+      redirect_to tweets_url
+    else
+      render :new
+    end
+  end
+
+  private
+
+  def params_user
+    params.require(:user).permit(:name, :email, :password, :password_confirmation)
+  end
+end
+```
+
+### ログイン後タイムラインを表示
+
+```rb
+class SessionsController < ApplicationController
+  def new
+    @user = User.new
+    redirect_to tweets_url if logged_in?
+  end
+
+  def create
+    email    = params_user[:email]
+    password = params_user[:password]
+
+    if login(email, password)
+      redirect_to tweets_url, notice: "サインインしました"
+    else
+      @user = User.new(email: email)
+      render :new
+    end
+  end
+
+  def destroy
+    logout
+    redirect_to root_url, notice: "サインアウトしました"
+  end
+
+  private
+
+  def params_user
+    params.require(:user).permit(:email, :password)
+  end
+end
 ```
