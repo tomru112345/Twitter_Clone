@@ -320,6 +320,126 @@ http://localhost:3000/registrations/new へアクセス
 
 ![レイアウト変更後](./img/rails03.png)
 
+### サインアップ機能(新規作成画面)の実装
+
+* config/routes.rb
+
+バックアップを取る
+
+```bash
+cp ./config/routes.rb{,.default}
+```
+
+Routing を実装する
+
+```bash
+$ diff ./config/routes.rb{.default,}
+2,3c2
+<   get 'registrations/new'
+<   resources :users
+---
+>   resource :registrations, only: [:new, :create]
+```
+
+* app/models/user.rb
+
+バックアップを取る
+
+```bash
+cp ./app/models/user.rb{,.default}
+```
+
+Model を実装する
+
+* バリデーションは極力早く書くように
+
+* 開発中であってもおかしいレコードが DB に入り込まないように意識することが重要
+
+```bash
+$ diff ./app/models/user.rb{.default,}
+2a3,9
+>
+>   validates :name, presence: true, uniqueness: { case_sensitive: false }, format: { with: /\A[a-z][a-z0-9]+\z/ }, length: { in: 4..24 }
+>   validates :screen_name, length: { maximum: 140 }
+>   validates :bio, length: { maximum: 200  }
+>   validates :email, presence: true, uniqueness: { case_sensitive: false }
+>   validates :password, confirmation: true, length: { in: 6..24 }, if: :password
+>   validates :password_confirmation, presence: true, if: :password
+```
+
+* app/controllers/registrations_controller.rb
+
+バックアップを取る
+
+```bash
+cp ./app/controllers/registrations_controller.rb{,.default}
+```
+
+Controller を実装する
+
+```rb
+class RegistrationsController < ApplicationController
+  def new
+    @user = User.new
+  end
+end
+```
+
+比較する
+
+```bash
+$ diff ./app/controllers/registrations_controller.rb{.default,}
+2a3
+>     @user = User.new
+```
+
+* app/views/registrations/new.html.haml
+
+バックアップを取る
+
+```bash
+cp ./app/views/registrations/new.html.haml{,.default}
+```
+
+View を実装する
+
+```haml
+%h1 Registrations#new
+%p Find me in app/views/registrations/new.html.haml
+
+= form_for @user, url: registrations_path, method: :post do |f|
+  = f.label :name
+  = f.text_field :name
+  = f.label :email
+  = f.text_field :email
+  = f.label :password
+  = f.password_field :password
+  = f.label :password_confirmation
+  = f.password_field :password_confirmation
+  = f.submit
+```
+
+比較する
+
+```bash
+$ diff ./app/views/registrations/new.html.haml{.default,}
+2a3,13
+>
+> = form_for @user, url: registrations_path, method: :post do |f|
+>   = f.label :name
+>   = f.text_field :name
+>   = f.label :email
+>   = f.text_field :email
+>   = f.label :password
+>   = f.password_field :password
+>   = f.label :password_confirmation
+>   = f.password_field :password_confirmation
+>   = f.submit
+\ No newline at end of file
+```
+
+![入力フォームなどを追加](./img/rails04.png)
+
 ## 参考資料
 
 * [Ruby 入門](https://www.javadrive.jp/ruby/)
