@@ -726,6 +726,84 @@ code app/assets/stylesheets/registrations.css.sass
 
 ![sass 反映](./img/rails05.png)
 
+### サインイン機能(ログイン画面)の実装
+
+ログイン画面を new, その送信先のアクションを create, ログアウトを destroy という名前で実装する
+
+コントローラー名は sessions という名前にする
+
+```bash
+rails g controller sessions new
+```
+
+Route 定義
+
+```rb
+Rails.application.routes.draw do
+  resource :registrations, only: [:new, :create]
+  resource :sessions, only: [:new, :create, :destroy]
+  
+  root to: 'registrations#new'
+  # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
+end
+```
+
+### ログイン画面へのリンク作成
+
+* app/assets/stylesheets/registrations.css.sass
+
+```sass
+          margin-top: 10px
+          margin-bottom: 10px
+          font-size: 16px
+        .login
+          color: #fff
+          text-decoration: underline
+```
+
+* app/views/registrations/new.html.haml
+
+```haml
+        = f.label :password, "パスワード: 6文字以上", class: "control-label"
+        = f.password_field :password, class: "form-control"
+      .form-group
+        = f.label :password_confirmation, "確認用パスワード: 6文字以上", class: "control-label"
+        = f.password_field :password_confirmation, class: "form-control"
+      = f.submit "登録する", class: "btn btn-primary"
+      = link_to "ログインする", new_sessions_path, class: "login pull-right"
+      .clear
+```
+
+Controller (アクション)定義
+
+* app/controllers/sessions_controller.rb
+
+```rb
+class SessionsController < ApplicationController
+  def new
+    @user = User.new
+  end
+end
+```
+
+View (テンプレート)実装
+
+* app/views/sessions/new.html.haml
+
+```haml
+%h1 Sessions#new
+%p Find me in app/views/sessions/new.html.haml
+
+= form_for @user, url: sessions_path, method: :post do |f|
+  = f.label :email
+  = f.text_field :email
+  = f.label :password
+  = f.password_field :password
+  = f.submit
+```
+
+![ログイン画面追加](./img/rails06.png)
+
 ## 参考資料
 
 * [Ruby 入門](https://www.javadrive.jp/ruby/)
