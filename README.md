@@ -93,21 +93,55 @@ end
 
 ![デフォルトの表示を変更](./img/rails02.png)
 
-## [TODO] Railsアプリのカスタマイズ
+## 事前知識
 
-### ビューおよびコントローラーの作成
+### Bundler
+
+Bundler は gem を管理するための gem
+
+### Gemfile
+
+gem をインストールするための「設計図」のようなもの
+
+### gemfile.lock
+
+gem をインストールした後の、「結果図」のようなもの
+
+### bundle install
+
+railsは、gemfile.lockを元にgemのインストールを行う
+
+この時、gemfile.lockに記述されていない、且つgemfileに記述されているgemがある場合、そのgemとそのgemに関連するgemをインストール後、gemfile.lockを更新する
 
 ```bash
-rails g controller users index show
+bundle install
 ```
 
-次のようなファイルが自動生成
+## twitter クローン作成
+
+### 使用 Gem のインストール
+
+Gemfile に以下の欄を追加
+
+| gem | 内容 |
+| ---- | ---- |
+| sorcery | 認証機能 |
+| haml-rails | HTML 特化の文法を持つテンプレートエンジン |
+| bootstrap-sass | CSS フレームワーク |
+
+```Gemfile
+gem 'sorcery'
+gem 'haml-rails'
+gem 'bootstrap-sass'
+```
+
+インストールする
 
 ```bash
-app/controllers/users_controller.rb
-app/views/users/index.html.erb
-app/views/users/show.html.erb
+bundle install
 ```
+
+
 
 ## 参考資料
 
