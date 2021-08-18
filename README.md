@@ -269,6 +269,57 @@ mv ./app/assets/stylesheets/application.css{,.sass}
 @import bootstrap
 ```
 
+### layout の変更
+
+* app/views/layouts/application.html.erb
+
+バックアップを取る
+
+```bash
+cp ./app/views/layouts/application.html.erb{,.default}
+```
+
+application.html.erb を変更する
+
+```erb
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SampleApp</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_pack_tag 'application', 'data-turbolinks-track': 'reload' %>
+  </head>
+
+  <body id="application">
+    <div>
+      <%= yield %>
+    </div>
+  </body>
+</html>
+```
+
+変更を見る
+
+```bash
+$ diff ./app/views/layouts/application.html.erb{.default,}
+13,14c13,16
+<   <body>
+<     <%= yield %>
+---
+>   <body id="application">
+>     <div>
+>       <%= yield %>
+>     </div>
+```
+
+http://localhost:3000/registrations/new へアクセス
+
+![レイアウト変更後](./img/rails03.png)
+
 ## 参考資料
 
 * [Ruby 入門](https://www.javadrive.jp/ruby/)
