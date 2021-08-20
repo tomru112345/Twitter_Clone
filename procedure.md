@@ -252,7 +252,7 @@ cp ./app/models/user.rb{,.default}
 
 Model を実装する
 
-* バリデーションは極力早く書くように
+* [バリデーション](https://qiita.com/Qiita/items/c686397e4a0f4f11683d)は極力早く書くように
 
 * 開発中であってもおかしいレコードが DB に入り込まないように意識することが重要
 
