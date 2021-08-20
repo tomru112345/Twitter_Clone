@@ -15,21 +15,21 @@
                 つぶやき
             .num
                 #{@user.tweets.count}
-    %li
-        = link_to nil do
+    %li{ class: action_name == "follows" ? "active" : nil }
+        = link_to follows_user_path(@user) do 
             .text
                 フォロー
             .num
-                0
-    %li
-        = link_to nil do
+                #{@user.inverse_followers.count}
+    %li{ class: action_name == "followers" ? "active" : nil } 
+        = link_to followers_user_path(@user) do 
             .text
                 フォロワー
             .num
-                0
+                #{@user.followers.count} 
     %li{ class: action_name == "favorites" ? "active" : nil }
         = link_to favorites_user_path(@user) do 
             .text
                 お気に入り
             .num
-                0 
+                #{@user.favorites.count} 

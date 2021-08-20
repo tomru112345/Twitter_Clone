@@ -2693,3 +2693,5 @@ end
 ```
 
 * memo: before_filterは使用不可 => before_actionに変更
+* memo: _header.html.hamlはインデントの指定でバグるから注意
+* memo: class_name: 'クラス名'

@@ -8,6 +8,11 @@ class TweetsController < ApplicationController
     @tweet  = Tweet.new
   end
 
+  def timeline
+    @tweets = Tweet.eager_load(user: :inverse_follows).where(follows: { follower_id: current_user.id })
+    @tweet  = Tweet.new
+  end 
+
   # GET /tweets/1 or /tweets/1.json
   def show
   end
