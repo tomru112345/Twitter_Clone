@@ -2691,3 +2691,5 @@ class SessionsController < ApplicationController
   end
 end
 ```
+
+* memo: before_filterは使用不可 => before_actionに変更
