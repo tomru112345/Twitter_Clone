@@ -159,6 +159,12 @@ railsは、gemfile.lockを元にgemのインストールを行う
 bundle install
 ```
 
+## Oracle Cloud
+
+```bash
+bundle config build.sqlite3 "--with-sqlite3-lib=/usr/local/lib"
+```
+
 ## 参考資料
 
 * [Ruby 入門](https://www.javadrive.jp/ruby/)
