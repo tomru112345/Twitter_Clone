@@ -2692,6 +2692,388 @@ class SessionsController < ApplicationController
 end
 ```
 
+## お気に入り機能
+
+### many to many 連携のための中間テーブル生成
+
+```bash
+$ rails g model favorite user_id:integer tweet_id:integer
+```
+
+### インデックスの追加と高速化
+
+user_id からも tweet_id からも参照される可能性があるため、インデックスを貼る
+
+* db/migrate/20141123081706_create_favorites.rb 
+```ruby
+class CreateFavorites < ActiveRecord::Migration[6.1]
+  def change
+    create_table :favorites do |t|
+      t.integer :user_id
+      t.integer :tweet_id
+
+      t.timestamps
+
+      t.index :user_id
+      t.index :tweet_id
+      t.index :created_at
+    end
+  end
+end
+```
+
+### マイグレーションを実行
+
+```bash
+$ rake db:migrate
+```
+
+### ルーティングの定義
+
+* favorite の many to many 連携のうち、片方はユーザーで、かつアクセスしてきた人のアカウント(current_user)
+* よってプライマリキーをurlに含めて受け取る必要はない
+* なので、入れ子にしたresourceメソッドを用いる
+
+* config/routes.rb 
+```ruby
+   resource :sessions, only: [:new, :create, :destroy]
+   resource :settings, only: [:edit, :update]
+   resources :users, only: [:index, :show]
+   resources :tweets do
+     resource :favorites, only: [:create, :destroy]
+   end
+ 
+   root to: 'registrations#new' 
+```
+
+* config/routes.rb 
+```ruby
+   resource :registrations, only: [:new, :create]
+   resource :sessions, only: [:new, :create, :destroy]
+   resource :settings, only: [:edit, :update]
+ 
+   resources :users, only: [:index, :show] do
+     get :favorites, on: :member
+   end
+ 
+   resources :tweets do
+     resource :favorites, only: [:create, :destroy]
+   end 
+```
+
+### コントローラーの作成
+
+今回はコントローラーを手動で生成
+
+* app/controllers/favorites_controller.rb 
+```ruby
+ class FavoritesController < ApplicationController
+ end 
+```
+
+* befor_action :require_login でログインしていなければリダイレクトさせる
+* ログインしていなければ、createメソッドの本体が実行されない、という前提のおかげで、current_userが必ず存在することになる
+
+* お気に入りモデルのインスタンスをbuildメソッドで生成、それの保存を試みる
+
+* app/controllers/favorites_controller.rb 
+```ruby
+ class FavoritesController < ApplicationController
+   before_action :require_login
+ 
+   def create
+     @tweet    = Tweet.find(params[:tweet_id])
+     @favorite = current_user.favorites.build(tweet: @tweet)
+ 
+     if @favorite.save
+       redirect_to tweets_url, notice: "お気に入りに登録しました"
+     else
+       redirect_to tweets_url, alert: "このツイートはお気に入りに登録できません"
+    end
+   end
+ end 
+```
+
+* find_by / find_by! メソッドはプライマリキーでないカラムを1件取得するもの
+* ! がついていると、該当レコードがなかった場合に例外が飛ぶ
+* この例外は RecordNotFoundという例外で、最終的にHTTPステータスコード404の「Not Found」になる
+
+* 
+```ruby
+       redirect_to tweets_url, alert: "このツイートはお気に入りに登録できません"
+    end
+   end
+ 
+   def destroy
+     @favorite = current_user.favorites.find_by!(tweet_id: params[:tweet_id])
+     @favorite.destroy
+     redirect_to tweets_url, notice: "お気に入りを解除しました"
+   end
+ end 
+```
+
+* User#showにお気に入り一覧を表示
+
+* app/controllers/users_controller.rb 
+```ruby
+   def show
+     @user = User.find(params[:id])
+   end
+ 
+   def favorites
+     @user = User.find(params[:id])
+   end
+ end 
+```
+
+### モデルの記述
+
+* User, Tweet, Favoriteの関連付け
+  + many to many連携の定義
+  + Tweet も User も、Favoriteを複数持っていて、Favorite から見ると1つの User、1つのTweetに属している。
+
+* app/models/favorite.rb 
+```ruby
+ class Favorite < ActiveRecord::Base
+   belongs_to :user
+   belongs_to :tweet
+ end 
+```
+
+* app/models/tweet.rb 
+```
+ class Tweet < ActiveRecord::Base
+   belongs_to :user
+   has_many :favorites, dependent: :destroy
+ 
+   validates :user, presence: true
+   validates :content, presence: true, length: { in: 1..140 } 
+```
+
+* app/models/user.rb 
+```
+   authenticates_with_sorcery!
+ 
+   has_many :tweets, dependent: :destroy
+   has_many :favorites, dependent: :destroy
+ 
+   validates :name, presence: true, uniqueness: { case_sensitive: false }, format: { with: /\A[a-z][a-z0-9]+\z/ }, length: { in: 4..24 }
+   validates :screen_name, length: { maximum: 140 } 
+```
+
+* バリデーション定義
+  + User と Tweet を持っていることは必要だが、お気に入りの場合は同じ人が同じツイートを複数ふぁぼることはできない
+  + scope付きのuniqueness制約を与える
+
+* app/models/favorite.rb 
+```ruby
+ class Favorite < ActiveRecord::Base
+   belongs_to :user
+   belongs_to :tweet
+ 
+   validates :user, presence: true
+   validates :user_id, uniqueness: { scope: :tweet_id }
+   validates :tweet, presence: true
+ end 
+```
+
+* お気に入り登録しているかどうか、を返すメソッドの定義
+  + お気に入りしているかどうか、によって表示するボタンを変えたい
+  + そのtrue, falseを返すメソッドをモデルに実装する
+
+* app/models/tweet.rb 
+```ruby
+   validates :user, presence: true
+   validates :content, presence: true, length: { in: 1..140 }
+ 
+   def favorited_by? user
+     favorites.where(user_id: user.id).exists?
+   end
+ end 
+```
+
+* なお、モデル定義内でcurrent_userは使用できない
+* モデルはDBのレコードに対応する概念であり、通信にかかわるような情報とは関係を持たない
+
+### Viewを調整
+
+* つぶやき一覧にお気に入りリンクを配置
+
+* app/views/tweets/index.html.haml 
+```ruby
+             .tweet-content
+               %p
+                 = t.content
+               .content-footer
+                 = link_to "お気に入りに登録", tweet_favorites_path(t), method: :pos
+```
+
+* app/views/tweets/index.html.haml 
+```ruby
+               %p
+                 = t.content
+               .content-footer
+                 - if t.favorited_by? current_user
+                   = link_to "お気に入りの解除", tweet_favorites_path(t), method: :delete
+                 - else
+                   = link_to "お気に入りに登録", tweet_favorites_path(t), method: :post 
+```
+
+![つぶやき一覧にお気に入りリンクを配置](./img/rails01.gif)
+
+* user/_headerパーシャルの作成
+  + app/views/users/show.html.haml の内容を app/views/users/_header.html.haml にコピペする
+
+* app/views/users/_header.html.haml 
+```haml
+.user-info
+  - if notice
+    .alert.alert-info= notice
+  %span.user-name
+    = render_user_screen_name(@user)
+  %span.user-id
+    @#{@user.name}
+  .bio
+    = @user.bio
+
+%ul.nav.nav-tabs.nav-justified
+  %li.active
+    = link_to user_path(@user) do
+      .text
+        つぶやき
+      .num
+        #{@user.tweets.count}
+  %li
+    = link_to nil do
+      .text
+        フォロー
+      .num
+        0
+  %li
+    = link_to nil do
+      .text
+        フォロワー
+      .num
+        0
+  %li
+    = link_to nil do
+      .text
+        お気に入り
+      .num
+        0
+```
+
+* app/views/users/show.html.haml 
+```haml
+.col-xs-8#users-content
+
+  .list-group
+    - if @user.tweets.empty? 
+```
+
+* リンク先を設定
+
+* app/views/users/_header.html.haml 
+```haml
+      .num
+        0
+  %li
+    = link_to favorites_user_path(@user) do
+      .text
+        お気に入り
+      .num 
+```
+
+* パーシャルを読み込む
+
+* app/views/users/show.html.haml 
+```haml
+.col-xs-8#users-content
+  = render partial: "users/header"
+  .list-group
+    - if @user.tweets.empty?
+      .list-group-item 
+```
+
+* アクティブ表示
+
+* app/views/users/_header.html.haml 
+```haml
+    = @user.bio
+
+%ul.nav.nav-tabs.nav-justified
+  %li{ class: action_name == "show" ? "active" : nil }
+    = link_to user_path(@user) do
+      .text
+        つぶやき
+	
+    ...
+
+        フォロワー
+      .num
+        0
+  %li{ class: action_name == "favorites" ? "active" : nil }
+    = link_to favorites_user_path(@user) do
+      .text
+        お気に入り 
+```
+
+* users/_tweetパーシャルの作成
+  + users/show から users/_tweet にコピペ
+
+* app/views/users/_tweet.html.haml 
+```haml
+= div_for @user.tweets, class: "list-group-item" do |t|
+  %h4.user
+    %span.user-name
+      = link_to t.user.name, user_path(t.user)
+    %span.user-id
+      @#{t.user.name}
+    %span.time.pull-right
+      = distance_of_time_in_words_to_now(t.created_at)
+    .clear
+  .tweet-content
+    %p
+      = t.content 
+```
+
+* app/views/users/show.html.haml 
+```haml
+    - if @user.tweets.empty?
+      .list-group-item
+        まだツイートはありません
+```
+
+* app/views/users/_tweet.html.haml 
+```haml
+= div_for tweet, class: "list-group-item" do |t|
+  %h4.user
+    %span.user-name
+      = link_to t.user.name, user_path(t.user) 
+```
+
+* app/views/users/show.html.haml 
+```haml
+    - if @user.tweets.empty?
+      .list-group-item
+        まだツイートはありません
+    = render partial: "users/tweet", collection: @user.tweets 
+```
+
+* お気に入り一覧viewを作成
+
+* app/views/users/favorites.html.haml
+```haml 
+.col-xs-8#users-content
+  = render partial: "users/header"
+  .list-group
+    - if @user.favorites.empty?
+      .list-group-item
+        まだお気に入りに登録されたツイートはありません
+    = render partial: "users/tweet", collection: @user.favorites.map{|f| f.tweet}
+```
+
+![お気に入り一覧viewを作成](./img/rails21.png)
+
 * memo: before_filterは使用不可 => before_actionに変更
-* memo: _header.html.hamlはインデントの指定でバグるから注意
-* memo: class_name: 'クラス名'
+* memo: class_name: 'クラス名'P
