@@ -58,6 +58,14 @@
     - [ログインしている場合はタイムラインを表示する](#ログインしている場合はタイムラインを表示する)
     - [会員登録後タイムラインを表示](#会員登録後タイムラインを表示)
     - [ログイン後タイムラインを表示](#ログイン後タイムラインを表示)
+    - [お気に入り機能](#お気に入り機能)
+      - [many-to-many連携のための中間テーブル生成](#many-to-many連携のための中間テーブル生成)
+      - [インデックスの追加と高速化](#インデックスの追加と高速化)
+      - [マイグレーションを実行](#マイグレーションを実行)
+      - [ルーティングの定義](#ルーティングの定義)
+      - [コントローラーの作成](#コントローラーの作成)
+      - [モデルの記述](#モデルの記述)
+      - [Viewを調整](#Viewを調整)
 
 ## twitter クローン作成
 
@@ -2694,7 +2702,7 @@ end
 
 ## お気に入り機能
 
-### many to many 連携のための中間テーブル生成
+### many-to-many連携のための中間テーブル生成
 
 ```bash
 $ rails g model favorite user_id:integer tweet_id:integer
@@ -2829,8 +2837,8 @@ $ rake db:migrate
 ### モデルの記述
 
 * User, Tweet, Favoriteの関連付け
-  + many to many連携の定義
-  + Tweet も User も、Favoriteを複数持っていて、Favorite から見ると1つの User、1つのTweetに属している。
+  * many to many連携の定義
+  * Tweet も User も、Favoriteを複数持っていて、Favorite から見ると1つの User、1つのTweetに属している。
 
 * app/models/favorite.rb 
 ```ruby
@@ -2862,8 +2870,8 @@ $ rake db:migrate
 ```
 
 * バリデーション定義
-  + User と Tweet を持っていることは必要だが、お気に入りの場合は同じ人が同じツイートを複数ふぁぼることはできない
-  + scope付きのuniqueness制約を与える
+  * User と Tweet を持っていることは必要だが、お気に入りの場合は同じ人が同じツイートを複数ふぁぼることはできない
+  * scope付きのuniqueness制約を与える
 
 * app/models/favorite.rb 
 ```ruby
@@ -2878,8 +2886,8 @@ $ rake db:migrate
 ```
 
 * お気に入り登録しているかどうか、を返すメソッドの定義
-  + お気に入りしているかどうか、によって表示するボタンを変えたい
-  + そのtrue, falseを返すメソッドをモデルに実装する
+  * お気に入りしているかどうか、によって表示するボタンを変えたい
+  * そのtrue, falseを返すメソッドをモデルに実装する
 
 * app/models/tweet.rb 
 ```ruby
@@ -2922,7 +2930,7 @@ $ rake db:migrate
 ![つぶやき一覧にお気に入りリンクを配置](./img/rails01.gif)
 
 * user/_headerパーシャルの作成
-  + app/views/users/show.html.haml の内容を app/views/users/_header.html.haml にコピペする
+  * app/views/users/show.html.haml の内容を app/views/users/_header.html.haml にコピペする
 
 * app/views/users/_header.html.haml 
 ```haml
@@ -3019,7 +3027,7 @@ $ rake db:migrate
 ```
 
 * users/_tweetパーシャルの作成
-  + users/show から users/_tweet にコピペ
+  * users/show から users/_tweet にコピペ
 
 * app/views/users/_tweet.html.haml 
 ```haml
