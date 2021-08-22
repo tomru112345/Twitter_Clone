@@ -17,6 +17,8 @@ class User < ApplicationRecord
   validates :password_confirmation, presence: true, if: :password
 
   def followed_by? user
-    inverse_follows.where(follower_id: user.id).exists?
+    if user.instance_of?(User)
+      inverse_follows.where(follower_id: user.id).exists?
+    end
   end 
 end

@@ -1,5 +1,8 @@
 #sessions-new
   .col-xs-5.login-content
+    - if notice
+      %p
+        .alert.alert-info= notice
     - if action_name == "create"
       .alert.alert-danger
         メールアドレスまたはパスワードが正しくありません。

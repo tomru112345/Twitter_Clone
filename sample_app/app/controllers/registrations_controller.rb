@@ -9,7 +9,7 @@ class RegistrationsController < ApplicationController
 
     if @user.save
       login(@user.email, @user.password)
-      redirect_to tweets_url
+      redirect_to new_sessions_url, notice: "アカウントを作成しました"
     else
       render :new
     end

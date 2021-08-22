@@ -3613,3 +3613,48 @@ end
             margin-bottom: 0px
             margin-right: 10px
 ```
+
+## アカウント作成=>自動ログインでバグるのを修正
+
+* sample_app\app\models\tweet.rb
+```rb
+    def favorited_by? user
+        if user.instance_of?(User)
+            favorites.where(user_id: user.id).exists?
+        end
+    end 
+```
+
+* sample_app\app\models\user.rb
+```rb
+  def followed_by? user
+    if user.instance_of?(User)
+      inverse_follows.where(follower_id: user.id).exists?
+    end
+  end 
+```
+
+* sample_app\app\controllers\registrations_controller.rb
+```rb
+  def create
+    @user = User.new(params_user)
+
+    if @user.save
+      login(@user.email, @user.password)
+      redirect_to new_sessions_url, notice: "アカウントを作成しました"
+    else
+      render :new
+    end
+  end
+```
+
+* sample_app\app\views\sessions\new.html.haml
+```rb
+#sessions-new
+  .col-xs-5.login-content
+    - if notice
+      %p
+        .alert.alert-info= notice
+    - if action_name == "create"
+      .alert.alert-danger
+```
