@@ -3466,16 +3466,7 @@ end
           .alert.alert-info= notice 
 ```
 
-* tweets/index から users/_tweetにコピペ
-
-* app/views/tweets/index.html.haml 
-```haml
-            .tweet-content
-              %p
-                = t.content 
-```
-
-* app/views/users/_tweet.html.haml 
+* tweets/index から tweets/_tweetにコピペ
 ```haml
             .tweet-content
               %p
@@ -3594,4 +3585,31 @@ end
               = link_to "すべてのつぶやき", tweets_path, class: "btn btn-default"
               = link_to "フォローしている人のつぶやき", timeline_tweets_path, class: "active btn btn-primary" 
           = render partial: "users/tweet", collection: @tweets
+```
+
+## favoriteボタンの変更
+
+* sample_app\app\views\users\_tweet.html.haml
+```haml
+    .content-footer
+      - if t.favorited_by? current_user
+        = link_to 0x2605.chr("UTF-8"), tweet_favorites_path(t), method: :delete
+      - else
+        = link_to 0x2606.chr("UTF-8"), tweet_favorites_path(t), method: :post
+      - if t.user.followed_by? current_user
+        = link_to "フォロー解除", user_follows_path(t.user), method: :delete
+      - else
+        = link_to "フォロー", user_follows_path(t.user), method: :post 
+```
+
+* sample_app\app\assets\stylesheets\application.css.sass
+```
+      .tweet-content
+        font-size: 16px
+        .content-footer
+          a
+            font-size: 18px
+            margin-top: 0px
+            margin-bottom: 0px
+            margin-right: 10px
 ```
