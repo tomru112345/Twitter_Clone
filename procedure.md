@@ -2,70 +2,78 @@
 
 ## 目次
 
-- [手順書](#手順書)
-  - [目次](#目次)
-  - [twitter クローン作成](#twitter-クローン作成)
-    - [使用 Gem のインストール](#使用-gem-のインストール)
-    - [css のフォーマットを変更](#css-のフォーマットを変更)
-    - [認証機能のコードを自動生成](#認証機能のコードを自動生成)
-    - [scaffold で users を作成](#scaffold-で-users-を作成)
-    - [ユーザー名、表示名、プロフィールのカラムを追加](#ユーザー名表示名プロフィールのカラムを追加)
-    - [マイグレーションしてデータベース・テーブルを作成](#マイグレーションしてデータベーステーブルを作成)
-    - [サインアップ用のコントローラーを生成](#サインアップ用のコントローラーを生成)
-    - [Bootstrap の読み込み](#bootstrap-の読み込み)
-    - [layout の変更](#layout-の変更)
-    - [サインアップ機能(新規作成画面)の実装](#サインアップ機能新規作成画面の実装)
-    - [サインアップ機能(新規登録の実行)の実装](#サインアップ機能新規登録の実行の実装)
-    - [登録に失敗した際のエラーメッセージを表示](#登録に失敗した際のエラーメッセージを表示)
-    - [デフォルトの言語を日本語に設定する](#デフォルトの言語を日本語に設定する)
-    - [ロケールファイル追加](#ロケールファイル追加)
-    - [背景画像の設定](#背景画像の設定)
-    - [サインイン機能(ログイン画面)の実装](#サインイン機能ログイン画面の実装)
-    - [ログイン画面へのリンク作成](#ログイン画面へのリンク作成)
-    - [ログイン機能(ログイン処理)の実装](#ログイン機能ログイン処理の実装)
-    - [ログイン失敗時のエラーメッセージ表示](#ログイン失敗時のエラーメッセージ表示)
-    - [ユーザー一覧とプロフィール](#ユーザー一覧とプロフィール)
-    - [Users#index の Template(View) を書く](#usersindex-の-templateview-を書く)
-    - [Users#showのTemplate(View)を書く](#usersshowのtemplateviewを書く)
-    - [Users#indexを調整する](#usersindexを調整する)
-    - [Users#showを調整する](#usersshowを調整する)
-    - [ヘッダーのPartial(View)の書く](#ヘッダーのpartialviewの書く)
-    - [プロフィール設定](#プロフィール設定)
-    - [helper を使う](#helper-を使う)
-    - [Settings#edit を調整する](#settingsedit-を調整する)
-    - [Settings#editのスタイル設定](#settingseditのスタイル設定)
-    - [validation の設定](#validation-の設定)
-    - [ログアウト機能](#ログアウト機能)
-    - [Users#index, showをログインしていないと入れないようにする](#usersindex-showをログインしていないと入れないようにする)
-    - [noticeの表示](#noticeの表示)
-    - [Sessions#new の notice](#sessionsnew-の-notice)
-    - [tweet 機能のコード生成](#tweet-機能のコード生成)
-    - [tweets テーブルにインデックスをはる](#tweets-テーブルにインデックスをはる)
-    - [ヘッダーに tweets#index へのリンクを置く](#ヘッダーに-tweetsindex-へのリンクを置く)
-    - [サインアップ後にログインするようにする](#サインアップ後にログインするようにする)
-    - [Route 定義の順序の変更](#route-定義の順序の変更)
-    - [Controller 変更](#controller-変更)
-    - [ログインしていないと見れないようにする](#ログインしていないと見れないようにする)
-    - [TweetモデルとUserモデルの関連付け(one to many関連)](#tweetモデルとuserモデルの関連付けone-to-many関連)
-    - [Tweet の Validation 定義](#tweet-の-validation-定義)
-    - [View(テンプレート)実装](#viewテンプレート実装)
-    - [つぶやきの作成時間を修整する](#つぶやきの作成時間を修整する)
-    - [ツイート一覧画面から、ツイートを投稿できるようにする](#ツイート一覧画面からツイートを投稿できるようにする)
-    - [投稿後は、ツイート一覧画面にリダイレクトする](#投稿後はツイート一覧画面にリダイレクトする)
-    - [ツイート投稿失敗した場合のメッセージ表示](#ツイート投稿失敗した場合のメッセージ表示)
-    - [Tweetを新しい順で並べ替える](#tweetを新しい順で並べ替える)
-    - [Users#showの内容を調整](#usersshowの内容を調整)
-    - [ログインしている場合はタイムラインを表示する](#ログインしている場合はタイムラインを表示する)
-    - [会員登録後タイムラインを表示](#会員登録後タイムラインを表示)
-    - [ログイン後タイムラインを表示](#ログイン後タイムラインを表示)
-    - [お気に入り機能](#お気に入り機能)
-      - [many-to-many連携のための中間テーブル生成](#many-to-many連携のための中間テーブル生成)
-      - [インデックスの追加と高速化](#インデックスの追加と高速化)
-      - [マイグレーションを実行](#マイグレーションを実行)
-      - [ルーティングの定義](#ルーティングの定義)
-      - [コントローラーの作成](#コントローラーの作成)
-      - [モデルの記述](#モデルの記述)
-      - [Viewを調整](#Viewを調整)
+- [twitter クローン作成](#twitter-クローン作成)
+  - [使用 Gem のインストール](#使用-gem-のインストール)
+  - [css のフォーマットを変更](#css-のフォーマットを変更)
+  - [認証機能のコードを自動生成](#認証機能のコードを自動生成)
+  - [scaffold で users を作成](#scaffold-で-users-を作成)
+  - [ユーザー名、表示名、プロフィールのカラムを追加](#ユーザー名表示名プロフィールのカラムを追加)
+  - [マイグレーションしてデータベース・テーブルを作成](#マイグレーションしてデータベーステーブルを作成)
+  - [サインアップ用のコントローラーを生成](#サインアップ用のコントローラーを生成)
+  - [Bootstrap の読み込み](#bootstrap-の読み込み)
+  - [layout の変更](#layout-の変更)
+  - [サインアップ機能(新規作成画面)の実装](#サインアップ機能新規作成画面の実装)
+  - [サインアップ機能(新規登録の実行)の実装](#サインアップ機能新規登録の実行の実装)
+  - [登録に失敗した際のエラーメッセージを表示](#登録に失敗した際のエラーメッセージを表示)
+  - [デフォルトの言語を日本語に設定する](#デフォルトの言語を日本語に設定する)
+  - [ロケールファイル追加](#ロケールファイル追加)
+  - [背景画像の設定](#背景画像の設定)
+  - [サインイン機能(ログイン画面)の実装](#サインイン機能ログイン画面の実装)
+  - [ログイン画面へのリンク作成](#ログイン画面へのリンク作成)
+  - [ログイン機能(ログイン処理)の実装](#ログイン機能ログイン処理の実装)
+  - [ログイン失敗時のエラーメッセージ表示](#ログイン失敗時のエラーメッセージ表示)
+  - [ユーザー一覧とプロフィール](#ユーザー一覧とプロフィール)
+  - [Users#index の Template(View) を書く](#usersindex-の-templateview-を書く)
+  - [Users#showのTemplate(View)を書く](#usersshowのtemplateviewを書く)
+  - [Users#indexを調整する](#usersindexを調整する)
+  - [Users#showを調整する](#usersshowを調整する)
+  - [ヘッダーのPartial(View)の書く](#ヘッダーのpartialviewの書く)
+  - [プロフィール設定](#プロフィール設定)
+  - [helper を使う](#helper-を使う)
+  - [Settings#edit を調整する](#settingsedit-を調整する)
+  - [Settings#editのスタイル設定](#settingseditのスタイル設定)
+  - [validation の設定](#validation-の設定)
+  - [ログアウト機能](#ログアウト機能)
+  - [Users#index, showをログインしていないと入れないようにする](#usersindex-showをログインしていないと入れないようにする)
+  - [noticeの表示](#noticeの表示)
+  - [Sessions#new の notice](#sessionsnew-の-notice)
+  - [tweet 機能のコード生成](#tweet-機能のコード生成)
+  - [tweets テーブルにインデックスをはる](#tweets-テーブルにインデックスをはる)
+  - [ヘッダーに tweets#index へのリンクを置く](#ヘッダーに-tweetsindex-へのリンクを置く)
+  - [サインアップ後にログインするようにする](#サインアップ後にログインするようにする)
+  - [Route 定義の順序の変更](#route-定義の順序の変更)
+  - [Controller 変更](#controller-変更)
+  - [ログインしていないと見れないようにする](#ログインしていないと見れないようにする)
+  - [TweetモデルとUserモデルの関連付け(one to many関連)](#tweetモデルとuserモデルの関連付けone-to-many関連)
+  - [Tweet の Validation 定義](#tweet-の-validation-定義)
+  - [View(テンプレート)実装](#viewテンプレート実装)
+  - [つぶやきの作成時間を修整する](#つぶやきの作成時間を修整する)
+  - [ツイート一覧画面から、ツイートを投稿できるようにする](#ツイート一覧画面からツイートを投稿できるようにする)
+  - [投稿後は、ツイート一覧画面にリダイレクトする](#投稿後はツイート一覧画面にリダイレクトする)
+  - [ツイート投稿失敗した場合のメッセージ表示](#ツイート投稿失敗した場合のメッセージ表示)
+  - [Tweetを新しい順で並べ替える](#tweetを新しい順で並べ替える)
+  - [Users#showの内容を調整](#usersshowの内容を調整)
+  - [ログインしている場合はタイムラインを表示する](#ログインしている場合はタイムラインを表示する)
+  - [会員登録後タイムラインを表示](#会員登録後タイムラインを表示)
+  - [ログイン後タイムラインを表示](#ログイン後タイムラインを表示)
+  - [お気に入り機能](#お気に入り機能)
+    - [favorite-many-to-many連携のための中間テーブル生成](#favorite-many-to-many連携のための中間テーブル生成)
+    - [favorite-インデックスの追加と高速化](#favorite-インデックスの追加と高速化)
+    - [favorite-マイグレーションを実行](#favorite-マイグレーションを実行)
+    - [favorite-ルーティングの定義](#favorite-ルーティングの定義)
+    - [favorite-コントローラーの作成](#favorite-コントローラーの作成)
+    - [favorite-モデルの記述](#favorite-モデルの記述)
+    - [favorite-Viewを調整](#favorite-Viewを調整)
+  - [フォロー機能](#フォロー機能)
+    - [follow-many-to-many連携のための中間テーブル生成](#follow-many-to-many連携のための中間テーブル生成)
+    - [follow-インデックスを追加して高速化](#follow-インデックスを追加して高速化)
+    - [follow-マイグレーションを実行](#follow-マイグレーションを実行)
+    - [follow-ルーティングを定義](#follow-ルーティングを定義)
+    - [follow-コントローラーの作成](#follow-コントローラーの作成)
+    - [follow-モデルを記述](#follow-モデルを記述)
+    - [follow-Viewを調整](#follow-Viewを調整)
+    - [follow-お気に入り/フォローしたとき、リファラを使って同じ画面を表示する](#follow-お気に入り/フォローしたとき、リファラを使って同じ画面を表示する)
+  - [全てのつぶやき-フォローしている人のつぶやきボタンの変化](#全てのつぶやき-フォローしている人のつぶやきボタンの変化)
 
 ## twitter クローン作成
 
@@ -2702,13 +2710,13 @@ end
 
 ## お気に入り機能
 
-### many-to-many連携のための中間テーブル生成
+### favorite-many-to-many連携のための中間テーブル生成
 
 ```bash
 $ rails g model favorite user_id:integer tweet_id:integer
 ```
 
-### インデックスの追加と高速化
+### favorite-インデックスの追加と高速化
 
 user_id からも tweet_id からも参照される可能性があるため、インデックスを貼る
 
@@ -2730,13 +2738,13 @@ class CreateFavorites < ActiveRecord::Migration[6.1]
 end
 ```
 
-### マイグレーションを実行
+### favorite-マイグレーションを実行
 
 ```bash
 $ rake db:migrate
 ```
 
-### ルーティングの定義
+### favorite-ルーティングの定義
 
 * favorite の many to many 連携のうち、片方はユーザーで、かつアクセスしてきた人のアカウント(current_user)
 * よってプライマリキーをurlに含めて受け取る必要はない
@@ -2769,7 +2777,7 @@ $ rake db:migrate
    end 
 ```
 
-### コントローラーの作成
+### favorite-コントローラーの作成
 
 今回はコントローラーを手動で生成
 
@@ -2834,11 +2842,11 @@ $ rake db:migrate
  end 
 ```
 
-### モデルの記述
+### favorite-モデルの記述
 
-* User, Tweet, Favoriteの関連付け
-  * many to many連携の定義
-  * Tweet も User も、Favoriteを複数持っていて、Favorite から見ると1つの User、1つのTweetに属している。
+- User, Tweet, Favoriteの関連付け
+  - many to many連携の定義
+  - Tweet も User も、Favoriteを複数持っていて、Favorite から見ると1つの User、1つのTweetに属している。
 
 * app/models/favorite.rb 
 ```ruby
@@ -2869,9 +2877,9 @@ $ rake db:migrate
    validates :screen_name, length: { maximum: 140 } 
 ```
 
-* バリデーション定義
-  * User と Tweet を持っていることは必要だが、お気に入りの場合は同じ人が同じツイートを複数ふぁぼることはできない
-  * scope付きのuniqueness制約を与える
+- バリデーション定義
+  - User と Tweet を持っていることは必要だが、お気に入りの場合は同じ人が同じツイートを複数ふぁぼることはできない
+  - scope付きのuniqueness制約を与える
 
 * app/models/favorite.rb 
 ```ruby
@@ -2885,9 +2893,9 @@ $ rake db:migrate
  end 
 ```
 
-* お気に入り登録しているかどうか、を返すメソッドの定義
-  * お気に入りしているかどうか、によって表示するボタンを変えたい
-  * そのtrue, falseを返すメソッドをモデルに実装する
+- お気に入り登録しているかどうか、を返すメソッドの定義
+  - お気に入りしているかどうか、によって表示するボタンを変えたい
+  - そのtrue, falseを返すメソッドをモデルに実装する
 
 * app/models/tweet.rb 
 ```ruby
@@ -2903,7 +2911,7 @@ $ rake db:migrate
 * なお、モデル定義内でcurrent_userは使用できない
 * モデルはDBのレコードに対応する概念であり、通信にかかわるような情報とは関係を持たない
 
-### Viewを調整
+### favorite-Viewを調整
 
 * つぶやき一覧にお気に入りリンクを配置
 
@@ -3083,5 +3091,507 @@ $ rake db:migrate
 
 ![お気に入り一覧viewを作成](./img/rails21.png)
 
-* memo: before_filterは使用不可 => before_actionに変更
-* memo: class_name: 'クラス名'P
+## フォロー機能
+
+* フォローする / フォローを解除する の実装
+* フォロー一覧 / フォロワー一覧を表示(User#showと同じ画面)
+* フォローしている人のみのタイムラインを作成
+
+### follow-many-to-many連携のための中間テーブル生成
+
+* favorite機能と同様
+* 中間テーブルが、belongs_toする先がどちらもUserモデルになるため、名前衝突の可能性あり
+* userではない別の名前を与えなきゃいけないことに注意
+
+```bash
+$ rails g model follow follower_id:integer inverse_follower_id:integer
+```
+
+### follow-インデックスを追加して高速化
+
+* db/migrate/20141123090723_create_follows.rb 
+```ruby
+      t.integer :inverse_follower_id
+
+      t.timestamps
+
+      t.index :follower_id
+      t.index :inverse_follower_id
+    end
+  end
+end 
+```
+
+### follow-マイグレーションを実行
+
+```bash
+$ rake db:migrate
+```
+
+### follow-ルーティングを定義
+
+* favorite機能と同様
+
+* follow機能を実装
+
+* config/routes.rb 
+```ruby
+  resource :settings, only: [:edit, :update]
+
+  resources :users, only: [:index, :show] do
+    resource :follows, only: [:create, :destroy]
+    get :favorites, on: :member
+  end 
+```
+
+* フォロー一覧 / フォロワー一覧を表示
+
+* config/routes.rb 
+```rb
+    resource :follows, only: [:create, :destroy]
+    get :favorites, on: :member
+    get :follows, on: :member
+    get :followers, on: :member
+  end
+
+  resources :tweets do
+```
+
+* フォロワーのみのタイムラインを作成
+
+* config/routes.rb 
+```ruby
+
+  resources :tweets do
+    resource :favorites, only: [:create, :destroy]
+    get :timeline, on: :collection
+  end
+
+  root to: 'registrations#new' 
+```
+
+### follow-コントローラーの作成
+
+- follow機能を実装
+  - 手動でfollows_controller.rbを作成
+
+* app/controllers/follows_controller.rb 
+```ruby
+class FollowsController < ApplicationController
+  before_filter :require_login
+
+  def create
+    @user = User.find(params[:user_id])
+
+    if @user.inverse_follows.create(follower: current_user)
+      redirect_to tweets_url, notice: "フォローしました"
+    else
+      redirect_to tweets_url, alert: "フォローできません"
+    end
+  end
+
+  def destroy
+    @user = User.find(params[:user_id])
+    follow = @user.inverse_follows.find_by(follower: current_user.id)
+    follow.destroy
+    redirect_to tweets_url, notice: "フォローを解除しました"
+  end
+end 
+```
+
+* フォロー一覧 & フォロワー一覧を表示
+
+* app/controllers/users_controller.rb 
+```ruby
+  def favorites
+    @user = User.find(params[:id])
+  end
+
+  def follows
+    @user = User.find(params[:id])
+  end
+
+  def followers
+    @user = User.find(params[:id])
+  end 
+ end 
+```
+
+* フォロワーのみのタイムラインを作成
+
+* app/controllers/tweets_controller.rb 
+```ruby
+    @tweet  = Tweet.new
+  end
+
+  def timeline
+    @tweets = Tweet.eager_load(user: :inverse_follows).where(follows: { follower_id: current_user.id })
+    @tweet  = Tweet.new
+  end
+
+  # GET /tweets/1
+  # GET /tweets/1.json
+  def show 
+```
+
+### follow-モデルを記述
+
+- User, Followの関連付け
+  - follower :　フォローした人, inverse_follower : フォローされた人 とする
+  - 関連するモデル名(User)と、belongs_toする名前(followers, inverse_follower)が異なっている
+  - どのモデルなのかを示すため、class_nameオプションを指定する必要がある
+
+* app/models/follow.rb 
+```ruby
+class Follow < ActiveRecord::Base
+  belongs_to :follower, class_name: 'User'
+  belongs_to :inverse_follower, class_name: 'User'
+end 
+```
+
+* app/models/user.rb 
+```ruby
+  has_many :tweets, dependent: :destroy
+  has_many :favorites, dependent: :destroy
+
+  has_many :follows, foreign_key: :follower_id
+  has_many :inverse_followers, through: :follows
+  has_many :inverse_follows, foreign_key: :inverse_follower_id, class_name: 'Follow'
+  has_many :followers, through: :inverse_follows
+
+  validates :name, presence: true, uniqueness: { case_sensitive: false }, format: { with: /\A[a-z][a-z0-9]+\z/ }, length: { in: 4..24 }
+  validates :screen_name, length: { maximum: 140 }
+  validates :bio, length: { maximum: 200  } 
+```
+
+- バリデーションを定義
+  - favorite機能と同様
+
+* app/models/follow.rb 
+```ruby
+class Follow < ActiveRecord::Base
+  belongs_to :follower, class_name: User
+  belongs_to :inverse_follower, class_name: User
+
+  validates :follower, presence: true
+  validates :inverse_follower, presence: true
+  validates :inverse_follower_id, uniqueness: { scope: :follower_id }
+end 
+```
+
+* フォロー済みかどうか、を返すメソッドを定義
+
+* app/models/user.rb 
+```ruby
+  validates :email, presence: true, uniqueness: { case_sensitive: false }
+  validates :password, confirmation: true, length: { in: 6..24 }, if: :password
+  validates :password_confirmation, presence: true, if: :password
+
+  def followed_by? user
+    inverse_follows.where(follower_id: user.id).exists?
+  end
+end 
+```
+
+### follow-Viewを調整
+
+* follow機能を実装
+
+* app/views/tweets/index.html.haml 
+```haml
+                  = link_to "お気に入りの解除", tweet_favorites_path(t), method: :delete
+                - else
+                  = link_to "お気に入りに登録", tweet_favorites_path(t), method: :post
+                - if t.user.followed_by? current_user
+                  = link_to "フォロー解除", user_follows_path(t.user), method: :delete
+                - else
+                  = link_to "フォロー", user_follows_path(t.user), method: :post
+```
+
+* フォロー一覧 & フォロワー一覧を表示
+
+* app/views/users/_header.html.haml
+```haml
+      .num
+        #{@user.tweets.count}
+  %li
+    = link_to follows_user_path(@user) do
+      .text
+        フォロー
+      .num 
+```
+
+* app/views/users/follows.html.haml 
+```haml
+.col-xs-8#users-content
+  = render partial: "users/header"
+  .list-group 
+```
+
+* app/views/users/_user.html.haml 
+```haml
+= div_for user, class: "list-group-item" do |u|
+  %h4.user
+    %span.user-name
+      = link_to u.name, user_path(u)
+    %span.user-id
+      @#{u.name}
+  .bio
+    = u.bio
+  .follow-unfollow
+    - if u.followed_by? current_user
+      = link_to "フォロー解除", user_follows_path(u), method: :delete
+    - else
+      = link_to "フォロー", user_follows_path(u), method: :post 
+```
+
+* app/views/users/follows.html.haml
+```haml
+.col-xs-8#users-content
+  = render partial: "users/header"
+  .list-group
+    = render @user.inverse_followers 
+```
+
+* app/views/users/_header.html.haml 
+```haml
+      .num
+        0
+  %li
+    = link_to followers_user_path(@user) do
+      .text
+        フォロワー
+      .num 
+```
+
+* follows.html.hamlからコピペ+変更
+
+* app/views/users/followers.html.haml 
+```haml
+.col-xs-8#users-content
+  = render partial: "users/header"
+  .list-group
+    = render @user.followers 
+```
+
+* app/views/users/_header.html.haml 
+```haml
+      .text
+        フォロー
+      .num
+        #{@user.inverse_followers.count}
+  %li{ class: action_name == "followers" ? "active" : nil }
+    = link_to followers_user_path(@user) do
+      .text
+        フォロワー
+      .num
+        #{@user.followers.count}
+  %li{ class: action_name == "favorites" ? "active" : nil }
+    = link_to favorites_user_path(@user) do
+      .text
+        お気に入り
+      .num
+        #{@user.favorites.count}
+```
+
+* app/views/users/index.html.haml 
+```haml
+  .list-group
+    .list-group-item.user-list
+      %h2 ユーザー一覧
+    = render partial: "users/user", collection: @users 
+```
+
+* app/views/tweets/index.html.haml 
+```haml
+                    .text
+                      フォロー
+                    .num
+                      = link_to current_user.inverse_followers.count, follows_user_path(current_user)
+                  .col-xs-4.follower-num
+                    .text
+                      フォロワー
+                    .num
+                      = link_to current_user.followers.count, followers_user_path(current_user)
+              - @tweet.errors.full_messages.each do |message|
+                .alert.alert-danger= message
+              = form_for @tweet do |f| 
+```
+
+* tweets/index から tweets/_panel にコピペ
+
+* app/views/tweets/_panel.html.haml 
+```haml
+- if logged_in?
+  .panel.panel-default
+    .panel-body
+      = link_to user_path(current_user), class: "user" do
+        %span.user-name
+          = render_user_screen_name current_user
+        %span.user-id
+          @#{current_user.name}
+      .user-activity
+        .row
+          .col-xs-4.tweets-num
+            .text
+              つぶやき
+            .num
+              = link_to current_user.tweets.count, user_path(current_user)
+          .col-xs-4.follow-num
+            .text
+              フォロー
+            .num
+              = link_to current_user.inverse_followers.count, follows_user_path(current_user)
+          .col-xs-4.follower-num
+            .text
+              フォロワー
+            .num
+              = link_to current_user.followers.count, followers_user_path(current_user)
+      - @tweet.errors.full_messages.each do |message|
+        .alert.alert-danger= message
+      = form_for @tweet do |f|
+        .form-group
+          = f.text_area :content, class: "form-control"
+        = f.submit "つぶやく", class: "btn btn-success" 
+```
+
+* app/views/tweets/index.html.haml 
+```haml
+  .container
+    .row
+      .col-xs-4.left-content
+        = render partial: "panel" 
+      .col-xs-8.right-content
+        - if notice
+          .alert.alert-info= notice 
+```
+
+* tweets/index から users/_tweetにコピペ
+
+* app/views/tweets/index.html.haml 
+```haml
+            .tweet-content
+              %p
+                = t.content 
+```
+
+* app/views/users/_tweet.html.haml 
+```haml
+            .tweet-content
+              %p
+                = t.content
+              .content-footer
+                - if t.favorited_by? current_user
+                  = link_to "お気に入りの解除", tweet_favorites_path(t), method: :delete
+                - else
+                  = link_to "お気に入りに登録", tweet_favorites_path(t), method: :post
+                - if t.user.followed_by? current_user
+                  = link_to "フォロー解除", user_follows_path(t.user), method: :delete
+                - else
+                  = link_to "フォロー", user_follows_path(t.user), method: :post 
+```
+
+- フォロワーのみのタイムラインを作成
+  - tweets/index から tweets/timeline にコピペ
+
+* app/views/tweets/index.html.haml 
+```haml
+        - if notice
+          .alert.alert-info= notice
+        .list-group
+          = render partial: "users/tweet", collection: @tweets 
+```
+
+* app/views/tweets/timeline.html.haml 
+```haml
+#tweets-content
+  .container
+    .row
+      .col-xs-4.left-content
+        = render partial: "panel"
+      .col-xs-8.right-content
+        - if notice
+          .alert.alert-info= notice
+        .list-group
+          = render partial: "users/tweet", collection: @tweets 
+```
+
+* app/views/tweets/index.html.haml 
+```haml
+        - if notice
+          .alert.alert-info= notice
+        .list-group
+          .list-group-item
+            .btn-group
+              = link_to "すべてのつぶやき", tweets_path, class: "active btn btn-primary"
+              = link_to "フォローしている人のつぶやき", timeline_tweets_path, class: "btn btn-default"
+          = render partial: "users/tweet", collection: @tweets 
+```
+
+* app/views/tweets/timeline.html.haml 
+```haml
+        - if notice
+          .alert.alert-info= notice
+        .list-group
+          .list-group-item
+            .btn-group
+              = link_to "すべてのつぶやき", tweets_path, class: "active btn btn-primary"
+              = link_to "フォローしている人のつぶやき", timeline_tweets_path, class: "btn btn-default"
+          = render partial: "users/tweet", collection: @tweets 
+```
+
+### follow-お気に入り/フォローしたとき、リファラを使って同じ画面を表示する
+
+* app/controllers/favorites_controller.rb 
+```ruby
+    @favorite = current_user.favorites.build(tweet: @tweet)
+
+    if @favorite.save
+      redirect_to request.referer, notice: "お気に入りに登録しました"
+    else
+      redirect_to request.referer, alert: "このツイートはお気に入りに登録できません"
+   end
+  end
+
+  def destroy
+    @favorite = current_user.favorites.find_by!(tweet_id: params[:tweet_id])
+    @favorite.destroy
+    redirect_to request.referer, notice: "お気に入りを解除しました"
+  end
+end 
+```
+
+* app/controllers/follows_controller.rb 
+```ruby
+    @user = User.find(params[:user_id])
+
+    if @user.inverse_follows.create(follower: current_user)
+      redirect_to request.referer, notice: "フォローしました"
+    else
+      redirect_to request.referer, alert: "フォローできません"
+    end
+  end
+
+	...
+
+  
+    @user = User.find(params[:user_id])
+    follow = @user.inverse_follows.find_by(follower: current_user.id)
+    follow.destroy
+    redirect_to request.referer, notice: "フォローを解除しました"
+  end
+end
+```
+
+## 全てのつぶやき-フォローしている人のつぶやきボタンの変化
+
+* app\views\tweets\timeline.html.haml
+```haml
+          .alert.alert-info= notice
+        .list-group
+          .list-group-item
+            .btn-group
+              = link_to "すべてのつぶやき", tweets_path, class: "btn btn-default"
+              = link_to "フォローしている人のつぶやき", timeline_tweets_path, class: "active btn btn-primary" 
+          = render partial: "users/tweet", collection: @tweets
+```
