@@ -3664,6 +3664,31 @@ end
 
 ## googleAPIを利用して、ネガポジ度数を取得
 
+.envを使って、apiのkeyを隠すのでそれの準備
+
+* sample_app\Gemfile
+```rb
+gem 'dotenv-rails'
+```
+
+上記を追加したら、bumdle install
+
+```bash
+$ bundle install
+```
+
+* sample_app\.env
+```
+API_KEY = 'ここにAPIのKEY'
+```
+
+* sample_app\.gitignore
+```
+/.env
+```
+
+apiキーを使うときは ENV['API_KEY']
+
 tweetのdbに、scoreを保存するカラムを追加
 
 * sample_app\db\migrate\20210818142957_create_tweets.rb
