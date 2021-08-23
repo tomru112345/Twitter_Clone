@@ -19,7 +19,6 @@ class Tweet < ApplicationRecord
         text = self.content
 
         api = ENV['API_KEY']
-        p api
 
         uri = URI.parse("https://language.googleapis.com/v1beta2/documents:analyzeSentiment?key=#{api}")
         request = Net::HTTP::Post.new(uri)
