@@ -77,6 +77,7 @@
   - [favoriteボタンの変更](#favoriteボタンの変更)
   - [アカウント作成から自動ログインでバグるのを修正](#アカウント作成から自動ログインでバグるのを修正)
   - [googleAPIを利用して、ネガポジ度数を取得](#googleAPIを利用して、ネガポジ度数を取得)
+  - [ネガポジ度から、ツイート自身の背景色を変更する](#ネガポジ度から、ツイート自身の背景色を変更する)
 
 ## twitter クローン作成
 
@@ -3773,4 +3774,32 @@ end
       - else
         = link_to "フォロー", user_follows_path(t.user), method: :post
       = t.score
+```
+
+### ネガポジ度から、ツイート自身の背景色を変更する
+
+* sample_app\app\helpers\tweets_helper.rb
+```rb
+module TweetsHelper
+
+    def get_color(score)
+        if score > 0.5
+            return "background-color: #F0FFF0"
+        elsif score > -0.5
+            return "background-color: #FFFACD"
+        else
+            return "background-color: #FFE4E1"
+        end
+    end
+
+end
+```
+
+* sample_app\app\views\users\_tweet.html.haml
+```haml
+= div_for tweet, style: get_color(tweet.score), class: "list-group-item" do |t|
+  %h4.user
+    %span.user-name
+      = link_to t.user.name, user_path(t.user)
+    %span.user-id
 ```
