@@ -44,7 +44,14 @@ class Tweet < ApplicationRecord
         score =  json['documentSentiment']['score']
 
         self.score = score
+        self.save
+    end
+
+    def add_score user
+        user.score_sum += self.score
+        user.save
     end
 
     default_scope -> { order(created_at: :desc) }
 end
+

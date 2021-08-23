@@ -31,6 +31,7 @@ class TweetsController < ApplicationController
     @tweet = Tweet.new(tweet_params)
     @tweet.user = current_user
     @tweet.get_sentiment
+    @tweet.add_score(@tweet.user)
 
     respond_to do |format|
       if @tweet.save

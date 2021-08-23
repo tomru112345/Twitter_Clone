@@ -78,6 +78,7 @@
   - [アカウント作成から自動ログインでバグるのを修正](#アカウント作成から自動ログインでバグるのを修正)
   - [googleAPIを利用してネガポジ度数を取得](#googleAPIを利用してネガポジ度数を取得)
   - [ネガポジ度からツイート自身の背景色を変更する](#ネガポジ度からツイート自身の背景色を変更する)
+  - [userにscoreのsumの追加と平均値の出し方](#userにscoreのsumの追加と平均値の出し方)
 
 ## twitter クローン作成
 
@@ -3803,3 +3804,57 @@ end
       = link_to t.user.name, user_path(t.user)
     %span.user-id
 ```
+
+### userにscoreのsumの追加と平均値の出し方
+
+* sample_app\db\migrate\20210818050520_add_name_and_screen_name_and_bio_to_users.rb
+```rb
+class AddNameAndScreenNameAndBioToUsers < ActiveRecord::Migration[6.1]
+  def change
+    add_column :users, :name, :string
+    add_column :users, :screen_name, :string
+    add_column :users, :bio, :string
+    add_column :users, :score_sum, :float
+  end
+end
+```
+
+dbをいじったから、migrateで更新してね
+
+* sample_app\app\controllers\registrations_controller.rb
+```
+  def create
+    @user = User.new(params_user)
+    @user.score_sum = 0
+
+```
+
+* sample_app\app\models\tweet.rb
+```
+        json = JSON.parse(response.body)
+        score =  json['documentSentiment']['score']
+
+        self.score = score
+        self.save
+    end
+
+    def add_score user
+        user.score_sum += self.score
+        user.save
+    end
+
+```
+
+score_sum や tweets.count を使うときは、.to_f で float に直してね
+
+* sample_app\app\views\users\_tweet.html.haml
+```
+      - else
+        = link_to "フォロー", user_follows_path(t.user), method: :post
+      = t.score
+      - sum = t.user.score_sum
+      - num = t.user.tweets.count
+      = sum.to_f / num.to_f
+```
+
+

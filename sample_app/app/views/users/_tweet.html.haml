@@ -20,3 +20,6 @@
       - else
         = link_to "フォロー", user_follows_path(t.user), method: :post
       = t.score
+      - sum = t.user.score_sum
+      - num = t.user.tweets.count
+      = sum.to_f / num.to_f
