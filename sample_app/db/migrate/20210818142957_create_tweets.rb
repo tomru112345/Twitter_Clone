@@ -8,6 +8,8 @@ class CreateTweets < ActiveRecord::Migration[6.1]
       
       t.index :user_id
       t.index :created_at
+
+      t.float :score
     end
   end
 end

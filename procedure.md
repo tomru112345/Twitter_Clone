@@ -3660,3 +3660,92 @@ end
     - if action_name == "create"
       .alert.alert-danger
 ```
+
+## googleAPIを利用して、ネガポジ度数を取得
+
+tweetのdbに、scoreを保存するカラムを追加
+
+* sample_app\db\migrate\20210818142957_create_tweets.rb
+```
+      t.index :created_at
+
+      t.float :score
+    end
+```
+
+dbを変更したので、db:migrateを忘れずに
+
+実行しても何も起こらないときは sample_app\db\development.sqlite3 を消してからやってね
+
+```bash
+$ rake db:migrate
+```
+
+apiは隠してる. わかんない人は直接聞きにきてね
+
+* sample_app\app\models\tweet.rb
+```rb
+    def favorited_by? user
+        if user.instance_of?(User)
+            favorites.where(user_id: user.id).exists?
+        end
+    end 
+
+    def get_sentiment
+        require 'net/http'
+        require 'uri'
+        require 'json'
+
+        text = self.content
+
+        api = ENV['API_KEY']
+        p api
+
+        uri = URI.parse("https://language.googleapis.com/v1beta2/documents:analyzeSentiment?key=#{api}")
+        request = Net::HTTP::Post.new(uri)
+        request.content_type = "application/json"
+        request.body = ""
+        request.body = {
+            document:{
+                type:'PLAIN_TEXT',
+                content: text
+            },
+            encodingType: 'UTF8'
+        }.to_json
+
+        req_options = {
+            use_ssl: uri.scheme == "https",
+        }
+      
+        response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
+          http.request(request)
+        end
+      
+        json = JSON.parse(response.body)
+        score =  json['documentSentiment']['score']
+
+        self.score = score
+    end
+
+    default_scope -> { order(created_at: :desc) }
+end
+```
+
+* sample_app\app\controllers\tweets_controller.rb
+```rb
+  # POST /tweets or /tweets.json
+  def create
+    @tweet = Tweet.new(tweet_params)
+    @tweet.user = current_user
+    @tweet.get_sentiment
+
+```
+
+* sample_app\app\views\users\_tweet.html.haml
+```
+      - if t.user.followed_by? current_user
+        = link_to "フォロー解除", user_follows_path(t.user), method: :delete
+      - else
+        = link_to "フォロー", user_follows_path(t.user), method: :post
+      = t.score
+```

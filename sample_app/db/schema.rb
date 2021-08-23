@@ -36,6 +36,7 @@ ActiveRecord::Schema.define(version: 2021_08_20_082628) do
     t.string "content"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.float "score"
     t.index ["created_at"], name: "index_tweets_on_created_at"
     t.index ["user_id"], name: "index_tweets_on_user_id"
   end
