@@ -3845,6 +3845,16 @@ dbをいじったから、migrateで更新してね
 
 ```
 
+* sample_app\app\controllers\tweets_controller.rb
+```rb
+  # POST /tweets or /tweets.json
+  def create
+    @tweet = Tweet.new(tweet_params)
+    @tweet.user = current_user
+    @tweet.get_sentiment
+    @tweet.add_score(@tweet.user)
+```
+
 score_sum や tweets.count を使うときは、.to_f で float に直してね
 
 * sample_app\app\views\users\_tweet.html.haml
