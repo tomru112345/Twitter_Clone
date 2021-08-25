@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_08_20_082628) do
+ActiveRecord::Schema.define(version: 2021_08_25_052144) do
 
   create_table "favorites", force: :cascade do |t|
     t.integer "user_id"
@@ -29,6 +29,21 @@ ActiveRecord::Schema.define(version: 2021_08_20_082628) do
     t.datetime "updated_at", precision: 6, null: false
     t.index ["follower_id"], name: "index_follows_on_follower_id"
     t.index ["inverse_follower_id"], name: "index_follows_on_inverse_follower_id"
+  end
+
+  create_table "notifications", force: :cascade do |t|
+    t.integer "visitor_id", null: false
+    t.integer "visited_id", null: false
+    t.integer "post_id"
+    t.integer "comment_id"
+    t.string "action", default: "", null: false
+    t.boolean "checked", default: false, null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index "\"visitre_id\"", name: "index_notifications_on_visitre_id"
+    t.index ["comment_id"], name: "index_notifications_on_comment_id"
+    t.index ["post_id"], name: "index_notifications_on_post_id"
+    t.index ["visited_id"], name: "index_notifications_on_visited_id"
   end
 
   create_table "tweets", force: :cascade do |t|

@@ -25,6 +25,7 @@ gem 'haml-rails'
 gem 'bootstrap-sass'
 gem 'record_tag_helper'
 gem 'dotenv-rails'
+gem 'kaminari'
 
 # Use Active Model has_secure_password
 # gem 'bcrypt', '~> 3.1.7'

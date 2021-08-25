@@ -6,6 +6,7 @@ class FavoritesController < ApplicationController
     @favorite = current_user.favorites.build(tweet: @tweet)
 
     if @favorite.save
+      @tweet.create_notification_like!(current_user)
       redirect_to request.referer, notice: "お気に入りに登録しました" 
     else
       redirect_to request.referer, alert: "このツイートはお気に入りに登録できません"

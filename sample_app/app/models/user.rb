@@ -7,7 +7,10 @@ class User < ApplicationRecord
   has_many :follows, foreign_key: :follower_id
   has_many :inverse_followers, through: :follows
   has_many :inverse_follows, foreign_key: :inverse_follower_id, class_name: 'Follow'
-  has_many :followers, through: :inverse_follows 
+  has_many :followers, through: :inverse_follows
+  
+  has_many :active_notifications, class_name: 'Notification', foreign_key: 'visitor_id', dependent: :destroy
+  has_many :passive_notifications, class_name: 'Notification', foreign_key: 'visited_id', dependent: :destroy
   
   validates :name, presence: true, uniqueness: { case_sensitive: false }, format: { with: /\A[a-z][a-z0-9]+\z/ }, length: { in: 4..24 }
   validates :screen_name, length: { maximum: 140 }
@@ -21,4 +24,16 @@ class User < ApplicationRecord
       inverse_follows.where(follower_id: user.id).exists?
     end
   end 
+
+  def create_notification_follow!(current_user)
+    temp = Notification.where(["visitor_id = ? and visited_id = ? and action = ? ",current_user.id, id, 'follow'])
+    if temp.blank?
+        notification = current_user.active_notifications.new(
+            visited_id: id,
+            action: 'follow'
+        )
+        notification.save if notification.valid?
+    end
+  end
+
 end

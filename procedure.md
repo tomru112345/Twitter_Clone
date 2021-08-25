@@ -79,6 +79,13 @@
   - [googleAPIを利用してネガポジ度数を取得](#googleAPIを利用してネガポジ度数を取得)
   - [ネガポジ度からツイート自身の背景色を変更する](#ネガポジ度からツイート自身の背景色を変更する)
   - [userにscoreのsumの追加と平均値の出し方](#userにscoreのsumの追加と平均値の出し方)
+  - [通知機能の追加](#通知機能の追加)
+    - [通知モデルの作成](#通知モデルの作成)
+    - [モデル関連付け](#モデル関連付け)
+    - [通知作成メソッドの作成](#通知作成メソッドの作成)
+    - [通知作成メソッドの呼び出し](#通知作成メソッドの呼び出し)
+    - [通知画面の作成](#通知画面の作成)
+  - [お気に入りされた回数の表示](#お気に入りされた回数の表示)
 
 ## twitter クローン作成
 
@@ -3777,7 +3784,7 @@ end
       = t.score
 ```
 
-### ネガポジ度からツイート自身の背景色を変更する
+## ネガポジ度からツイート自身の背景色を変更する
 
 * sample_app\app\helpers\tweets_helper.rb
 ```rb
@@ -3805,7 +3812,7 @@ end
     %span.user-id
 ```
 
-### userにscoreのsumの追加と平均値の出し方
+## userにscoreのsumの追加と平均値の出し方
 
 * sample_app\db\migrate\20210818050520_add_name_and_screen_name_and_bio_to_users.rb
 ```rb
@@ -3867,4 +3874,262 @@ score_sum や tweets.count を使うときは、.to_f で float に直してね
       = sum.to_f / num.to_f
 ```
 
+## 通知機能の追加
+
+テーブル情報は以下の通り
+
+| visitor_id | visited_id | post_id | comment_id | action | cheched |
+| ---- | ---- | ---- | ---- | ---- | ---- |
+| 1 | 2 | nil | nil | follow | false |
+| 1 | 2 | 3 | nil | like | false |
+
+- visitor_id : 通知を送ったuserのid
+- visited_id : 通知を送られたuserのid
+- post_id : いいねされた投稿のid
+- comment_id : 投稿へのコメントのid
+- action : 通知の種類
+- checked : 通知を送られたuserが通知を確認したかどうか
+
+### 通知モデルの作成
+
+通知モデルを生成
+
+```bash
+$ rails g model Notification
+```
+
+マイグレーションファイルを変更
+
+* db\migrate\20210825052144_create_notifications.rb
+```ruby
+class CreateNotifications < ActiveRecord::Migration[5.2]
+  def change
+    create_table :notifications do |t|
+      t.integer :visitor_id, null: false
+      t.integer :visited_id, null: false
+      t.integer :post_id
+      t.integer :comment_id
+      t.string :action, default: '', null: false
+      t.boolean :checked, default: false, null: false
+
+      t.timestamps
+    end
+
+    add_index :notifications, :visitor_id
+    add_index :notifications, :visited_id
+    add_index :notifications, :post_id
+    add_index :notifications, :comment_id
+  end
+end
+```
+
+マイグレーションを実行
+
+```bash
+$ rails db:migrate
+```
+
+### モデル関連付け
+
+- active_notifications：自分からの通知
+- passive_notifications：相手からの通知
+
+* app\models\user.rb
+```ruby
+  has_many :inverse_follows, foreign_key: :inverse_follower_id, class_name: 'Follow'
+  has_many :followers, through: :inverse_follows
+  
+  has_many :active_notifications, class_name: 'Notification', foreign_key: 'visitor_id', dependent: :destroy
+  has_many :passive_notifications, class_name: 'Notification', foreign_key: 'visited_id', dependent: :destroy
+  
+```
+
+* app\models\tweet.rb
+```ruby
+class Tweet < ApplicationRecord
+    belongs_to :user
+    has_many :favorites, dependent: :destroy 
+
+    has_many :notifications, dependent: :destroy
+
+```
+
+* \app\models\notification.rb
+```ruby
+class Notification < ApplicationRecord
+    belongs_to :post, optional: true
+    belongs_to :comment, optional: true
+  
+    belongs_to :visitor, class_name: 'User', foreign_key: 'visitor_id', optional: true
+    belongs_to :visited, class_name: 'User', foreign_key: 'visited_id', optional: true
+
+    default_scope -> { order(created_at: :desc) }
+end
+```
+
+### 通知作成メソッドの作成
+
+* app\models\tweet.rb
+```ruby
+    def create_notification_like!(current_user)
+        # すでに「いいね」されているか検索
+        temp = Notification.where(["visitor_id = ? and visited_id = ? and post_id = ? and action = ? ", current_user.id, user_id, id, 'like'])
+        # いいねされていない場合のみ、通知レコードを作成
+        if temp.blank?
+            notification = current_user.active_notifications.new(
+                post_id: id,
+                visited_id: user_id,
+                action: 'like'
+            )
+            # 自分の投稿に対するいいねの場合は、通知済みとする
+            if notification.visitor_id == notification.visited_id
+                notification.checked = true
+            end
+            notification.save if notification.valid?
+        end
+    end
+
+```
+
+* app\models\user.rb
+```ruby
+  def create_notification_follow!(current_user)
+    temp = Notification.where(["visitor_id = ? and visited_id = ? and action = ? ",current_user.id, id, 'follow'])
+    if temp.blank?
+        notification = current_user.active_notifications.new(
+            visited_id: id,
+            action: 'follow'
+        )
+        notification.save if notification.valid?
+    end
+  end
+```
+
+### 通知作成メソッドの呼び出し
+
+* app\controllers\favorites_controller.rb
+```ruby 
+    if @favorite.save
+      @tweet.create_notification_like!(current_user)
+      redirect_to request.referer, notice: "お気に入りに登録しました" 
+    else
+```
+
+* app\controllers\follows_controller.rb
+```ruby 
+      if @user.inverse_follows.create(follower: current_user)
+        @user.create_notification_follow!(current_user)
+        redirect_to request.referer, notice: "フォローしました"
+      else
+```
+
+### 通知画面の作成
+
+コントローラー生成
+
+```bash
+$ rails g controller notifications
+```
+
+ルーティングの追加
+
+* config\routes.rb
+```
+
+  resources :notifications, only: [:index]
+  
+```
+
+indexアクションの実装
+
+* app\controllers\notifications_controller.rb
+```ruby
+class NotificationsController < ApplicationController
+
+    def index
+        @notifications = current_user.passive_notifications.page(params[:page]).per(20)
+        @notifications.where(checked: false).each do |notification|
+            notification.update(checked: true)
+        end
+    end
+
+end
+```
+
+なお、以下の処理にはgemのkaminariを使用する
+
+```ruby
+.page(params[:page]).per(20)
+```
+
+なのでgem fileに以下を追記してbundle installしてね
+
+* Gemfile
+```
+gem 'kaminari'
+```
+
+* app\views\notifications\index.html.haml
+```haml
+- notifications = @notifications.where.not(visitor_id: current_user.id)
+- if notifications.exists?
+  = render notifications
+  = paginate notifications
+- else
+  %p
+    | 通知はありません
+```
+
+* app\views\notifications\\_notification.html.haml
+```haml
+- visitor = notification.visitor
+- visited = notification.visited
+.col-md-6.mx-auto
+  .form-inline
+    %span
+      = link_to user_path(visitor) do
+        %strong
+          = visitor.name
+      = 'さんが'
+
+      - case notification.action
+      - when 'follow' then
+        = "あなたをフォローしました"
+      - when 'like' then
+        = "あなたの投稿にいいねしました"
+
+  .small.text-muted.text-right
+    = time_ago_in_words(notification.created_at).upcase
+  
+  %hr
+```
+
+* app\views\layouts\\_header.html.haml
+```haml
+        %li= link_to "全ツイート一覧", tweets_path
+        %li= link_to "ユーザー一覧", users_path
+      %ul.nav.navbar-nav.navbar-right
+        %li= link_to "通知", notifications_path
+        %li= link_to current_user.name, current_user
+        %li= link_to "設定", edit_settings_path
+```
+
+## お気に入りされた回数の表示
+
+#{t.favorites.count} でお気に入りされた回数が出せる！！
+
+* app\views\users\\_tweet.html.haml
+``` haml
+      - if t.favorited_by? current_user
+        = link_to 0x2605.chr("UTF-8"), tweet_favorites_path(t), method: :delete
+      - else
+        = link_to 0x2606.chr("UTF-8"), tweet_favorites_path(t), method: :post
+
+      #{t.favorites.count}
+
+      - if t.user.followed_by? current_user
+        = link_to "フォロー解除", user_follows_path(t.user), method: :delete
+      - else
+        = link_to "フォロー", user_follows_path(t.user), method: :post
+```
 
