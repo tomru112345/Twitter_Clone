@@ -4312,6 +4312,8 @@ positive.html.hamlへ移動するためのボタンを追加
 
 tweet_controllerに、positiveメソッドを追加
 
+privateには書かないでね
+
 * app\controllers\tweets_controller.rb
 ```ruby
   def positive
