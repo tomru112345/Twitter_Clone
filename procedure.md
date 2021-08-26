@@ -87,6 +87,7 @@
     - [通知画面の作成](#通知画面の作成)
   - [お気に入りされた回数の表示](#お気に入りされた回数の表示)
   - [doubtボタン](#doubtボタン)
+  - [ユーザー一覧の表示順をスコアの合計値についての降順にする](#ユーザー一覧の表示順をスコアの合計値についての降順にする)
 
 ## twitter クローン作成
 
@@ -4259,4 +4260,13 @@ viewに追加
         = link_to "doubtに登録", tweet_doubts_path(t), method: :post
       #{t.doubts.count} 
 
+```
+
+## ユーザー一覧の表示順をスコアの合計値についての降順にする
+
+以下のコードを追加
+
+* app\models\user.rb
+```ruby
+  default_scope -> { order(score_sum: :desc) }
 ```
