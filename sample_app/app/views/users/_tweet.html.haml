@@ -24,3 +24,8 @@
       - sum = t.user.score_sum
       - num = t.user.tweets.count
       = sum.to_f / num.to_f
+      - if t.doubted_by? current_user
+        = link_to "doubtの解除", tweet_doubts_path(t), method: :delete
+      - else
+        = link_to "doubtに登録", tweet_doubts_path(t), method: :post
+      #{t.doubts.count} 

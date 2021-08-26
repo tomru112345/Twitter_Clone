@@ -86,6 +86,7 @@
     - [通知作成メソッドの呼び出し](#通知作成メソッドの呼び出し)
     - [通知画面の作成](#通知画面の作成)
   - [お気に入りされた回数の表示](#お気に入りされた回数の表示)
+  - [doubtボタン](#doubtボタン)
 
 ## twitter クローン作成
 
@@ -4132,4 +4133,130 @@ gem 'kaminari'
       - else
         = link_to "フォロー", user_follows_path(t.user), method: :post
 ```
+## doubtボタン
 
+お気に入り機能とほぼ同様だけど、一応記載
+
+中間テーブル生成
+
+```bash
+$ rails g model favorite
+```
+
+* db\migrate\20210826071545_create_doubts.rb
+```ruby
+class CreateDoubts < ActiveRecord::Migration[6.1]
+  def change
+    create_table :doubts do |t|
+      t.integer :user_id
+      t.integer :tweet_id
+
+      t.timestamps
+
+      t.index :user_id
+      t.index :tweet_id
+      t.index :created_at
+    end
+  end
+end
+```
+
+マイグレーション実行
+
+```bash
+$ rails db:migrate
+```
+
+ルーティングの定義<br>
+なお、今回はuserのページにdoubtしたツイートの一覧を用意しないようにした
+
+* config\routes.rb
+```ruby
+  resources :tweets do
+    resource :favorites, only: [:create, :destroy]
+    resource :doubts, only: [:create, :destroy]
+    get :timeline, on: :collection 
+  end 
+```
+
+コントローラーの作成
+
+* app\controllers\doubts_controller.rb
+```ruby
+class DoubtsController < ApplicationController
+    before_action :require_login
+  
+    def create
+        @tweet = Tweet.find(params[:tweet_id])
+        @doubt = current_user.doubts.build(tweet: @tweet)
+
+        if @doubt.save
+            redirect_to tweets_url, notice: "ダウトに登録しました"
+        else
+            redirect_to tweets_url, alert: "このツイートはダウトに登録できません"
+    end
+  end
+
+  def destroy
+    @doubt = current_user.doubts.find_by!(tweet_id: params[:tweet_id])
+    @doubt.destroy
+    redirect_to tweets_url, notice: "ダウトを解除しました"
+  end
+end
+```
+
+モデルの記述
+
+* app\models\doubt.rb
+```ruby
+class Doubt < ApplicationRecord
+    belongs_to :user
+    belongs_to :tweet
+
+    validates :user, presence: true
+    validates :user_id, uniqueness: { scope: :tweet_id }
+    validates :tweet, presence: true
+end
+```
+
+* app\models\tweet.rb
+```ruby
+class Tweet < ApplicationRecord
+    belongs_to :user
+    has_many :favorites, dependent: :destroy 
+
+    has_many :notifications, dependent: :destroy
+    has_many :doubts, dependent: :destroy
+
+```
+
+* app\models\user.rb
+```ruby
+  has_many :active_notifications, class_name: 'Notification', foreign_key: 'visitor_id', dependent: :destroy
+  has_many :passive_notifications, class_name: 'Notification', foreign_key: 'visited_id', dependent: :destroy
+  has_many :doubts, dependent: :destroy
+
+```
+
+doubt登録されているかを返すメソッドの定義
+
+* app\models\tweet.rb
+```ruby
+    def doubted_by? user
+        if user.instance_of?(User)
+            doubts.where(user_id: user.id).exists?
+        end
+    end 
+```
+
+viewに追加
+
+* app\views\users\\_tweet.html.haml
+```haml
+      - if t.doubted_by? current_user
+        = link_to "doubtの解除", tweet_doubts_path(t), method: :delete
+      - else
+        = link_to "doubtに登録", tweet_doubts_path(t), method: :post
+      #{t.doubts.count} 
+
+```

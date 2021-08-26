@@ -3,6 +3,7 @@ class Tweet < ApplicationRecord
     has_many :favorites, dependent: :destroy 
 
     has_many :notifications, dependent: :destroy
+    has_many :doubts, dependent: :destroy
 
     validates :user, presence: true
 	validates :content, presence: true, length: { in: 1..140}
@@ -71,6 +72,12 @@ class Tweet < ApplicationRecord
             notification.save if notification.valid?
         end
     end
+
+    def doubted_by? user
+        if user.instance_of?(User)
+            doubts.where(user_id: user.id).exists?
+        end
+    end 
 
     default_scope -> { order(created_at: :desc) }
 end
