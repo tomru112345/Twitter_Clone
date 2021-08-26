@@ -4141,7 +4141,7 @@ gem 'kaminari'
 中間テーブル生成
 
 ```bash
-$ rails g model favorite
+$ rails g model doubt
 ```
 
 * db\migrate\20210826071545_create_doubts.rb
