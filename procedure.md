@@ -4270,3 +4270,64 @@ viewに追加
 ```ruby
   default_scope -> { order(score_sum: :desc) }
 ```
+
+## ネガティブなツイートを消したpositiveページの作成
+
+positive.html.hamlを作成
+
+* app\views\tweets\positive.html.haml
+```haml
+#tweets-content
+  .container
+    .row
+      .col-xs-4.left-content
+        = render partial: "panel"
+      .col-xs-8.right-content
+        - if notice
+          .alert.alert-info= notice
+        .list-group
+          .list-group-item
+            .btn-group
+              = link_to "すべてのつぶやき", tweets_path, class: "btn btn-default"
+              = link_to "フォローしている人のつぶやき", timeline_tweets_path, class: "btn btn-default" 
+              = link_to "positive", positive_tweets_path, class: "active btn btn-primary"
+          = render partial: "users/tweet", collection: @tweets
+```
+
+positive.html.hamlへ移動するためのボタンを追加
+
+* app\views\tweets\index.html.haml
+```haml
+              = link_to "すべてのつぶやき", tweets_path, class: "active btn btn-primary"
+              = link_to "フォローしている人のつぶやき", timeline_tweets_path, class: "btn btn-default" 
+              = link_to "positive", positive_tweets_path, class: "btn btn-default"
+```
+
+* app\views\tweets\timeline.html.haml
+```haml
+              = link_to "すべてのつぶやき", tweets_path, class: "btn btn-default"
+              = link_to "フォローしている人のつぶやき", timeline_tweets_path, class: "active btn btn-primary"
+              = link_to "positive", positive_tweets_path, class: "btn btn-default" 
+```
+
+tweet_controllerに、positiveメソッドを追加
+
+* app\controllers\tweets_controller.rb
+```ruby
+  def positive
+    @tweets = Tweet.all.where("score >= 0")
+    @tweet  = Tweet.new
+  end
+```
+
+routerにpositive.haml.hamlへのルートを設定
+
+* config\routes.rb
+```ruby
+  resources :tweets do
+    resource :favorites, only: [:create, :destroy]
+    resource :doubts, only: [:create, :destroy]
+    get :timeline, on: :collection 
+    get :positive, on: :collection
+  end 
+```

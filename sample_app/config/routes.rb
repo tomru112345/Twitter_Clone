@@ -14,6 +14,7 @@ Rails.application.routes.draw do
     resource :favorites, only: [:create, :destroy]
     resource :doubts, only: [:create, :destroy]
     get :timeline, on: :collection 
+    get :positive, on: :collection
   end 
 
   resources :notifications, only: [:index]

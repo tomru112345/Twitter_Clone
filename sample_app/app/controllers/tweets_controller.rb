@@ -11,7 +11,12 @@ class TweetsController < ApplicationController
   def timeline
     @tweets = Tweet.eager_load(user: :inverse_follows).where(follows: { follower_id: current_user.id })
     @tweet  = Tweet.new
-  end 
+  end
+  
+  def positive
+    @tweets = Tweet.all.where("score >= 0")
+    @tweet  = Tweet.new
+  end
 
   # GET /tweets/1 or /tweets/1.json
   def show
