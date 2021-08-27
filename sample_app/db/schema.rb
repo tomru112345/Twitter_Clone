@@ -76,6 +76,7 @@ ActiveRecord::Schema.define(version: 2021_08_26_071545) do
     t.string "screen_name"
     t.string "bio"
     t.float "score_sum"
+    t.float "score_ave"
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 

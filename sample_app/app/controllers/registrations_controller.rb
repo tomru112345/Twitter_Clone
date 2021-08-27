@@ -7,6 +7,7 @@ class RegistrationsController < ApplicationController
   def create
     @user = User.new(params_user)
     @user.score_sum = 0
+    @user.score_ave = 0
 
     if @user.save
       login(@user.email, @user.password)

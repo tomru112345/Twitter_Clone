@@ -37,6 +37,6 @@ class User < ApplicationRecord
     end
   end
 
-  default_scope -> { order(score_sum: :desc) }
+  default_scope -> { order(score_ave: :desc) }
 
 end

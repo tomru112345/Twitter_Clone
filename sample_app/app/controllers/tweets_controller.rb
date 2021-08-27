@@ -39,11 +39,11 @@ class TweetsController < ApplicationController
   def create
     @tweet = Tweet.new(tweet_params)
     @tweet.user = current_user
-    @tweet.get_sentiment
-    @tweet.add_score(@tweet.user)
 
     respond_to do |format|
       if @tweet.save
+        @tweet.get_sentiment
+        @tweet.add_score(@tweet.user)
         format.html { redirect_to tweets_url, notice: 'Tweet was successfully created.' }
         format.json { render :show, status: :created, location: @tweet }
       else

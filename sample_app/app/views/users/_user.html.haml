@@ -1,6 +1,8 @@
+- number = 0
 = div_for user, class: "list-group-item" do |u|
   %h4.user
     %span.user-name
+      #{number}位 : 
       = link_to u.name, user_path(u)
     %span.user-id
       @#{u.name}

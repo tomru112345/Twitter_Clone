@@ -52,6 +52,7 @@ class Tweet < ApplicationRecord
 
     def add_score user
         user.score_sum += self.score
+        user.score_ave = user.score_sum / user.tweets.count
         user.save
     end
 
