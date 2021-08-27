@@ -88,6 +88,8 @@
   - [お気に入りされた回数の表示](#お気に入りされた回数の表示)
   - [doubtボタン](#doubtボタン)
   - [ユーザー一覧の表示順をスコアの合計値についての降順にする](#ユーザー一覧の表示順をスコアの合計値についての降順にする)
+  - [ネガティブなツイートを消したpositiveページの作成](#ネガティブなツイートを消したpositiveページの作成)
+  - [home画面に通知欄を表示する方法](#home画面に通知欄を表示する方法)
 
 ## twitter クローン作成
 
@@ -4332,4 +4334,80 @@ routerにpositive.haml.hamlへのルートを設定
     get :timeline, on: :collection 
     get :positive, on: :collection
   end 
+```
+
+## home画面に通知欄を表示する方法
+
+app\views\notifications内に以下のファイルが記述されているとする
+
+通知一つの表示について記述したもの
+
+* app\views\notifications\\_notification.html.haml
+```haml
+- visitor = notification.visitor
+- visited = notification.visited
+.col-md-6.mx-auto
+  .form-inline
+    %span
+      = link_to user_path(visitor) do
+        %strong
+          = visitor.name
+      = 'さんが'
+
+      - case notification.action
+      - when 'follow' then
+        = "あなたをフォローしました"
+      - when 'like' then
+        = "あなたの投稿にいいねしました"
+
+  .small.text-muted.text-right
+    = time_ago_in_words(notification.created_at).upcase
+  
+  %hr
+```
+
+通知の一覧を表示するpanelについて記述したもの
+
+* app\views\notifications\\_panel.html.haml
+```haml
+- if logged_in?
+    - notifications = @notifications.where.not(visitor_id: current_user.id)
+    - if notifications.exists?
+        = render notifications
+        = paginate notifications
+    - else
+        %p
+            | 通知はありません
+```
+
+この_panel.html.hamlを、tweets\index.html.hamlにて、renderメソッドによって呼び出すことを考える
+
+しかし、このまま = render partial: "notifications/panel" で呼び出すと、_panel.html.hamlにおける@notificationsがnilとなって動かない。
+
+なのでtweets_controllerに以下の変更を加える
+
+* app\controllers\tweets_controller.rb
+```ruby
+  def index
+    @tweets = Tweet.all
+    @tweet  = Tweet.new
+    @notifications = current_user.passive_notifications.page(params[:page]).per(10)
+    @notifications.where(checked: false).each do |notification|
+        notification.update(checked: true)
+    end
+  end
+```
+
+追加した内容は、notifications_controllerのindexメソッドに書かれている者をそのままコピペしたものである
+
+この後、以下の変更を加えることで、「全てのつぶやき」ページいるときは通知欄がuserの下に表示されるようになる
+
+* app\views\tweets\index.html.haml
+```
+#tweets-content
+  .container
+    .row
+      .col-xs-4.left-content
+        = render partial: "panel" 
+        = render partial: "notifications/panel"
 ```

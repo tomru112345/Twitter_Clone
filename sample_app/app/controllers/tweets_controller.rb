@@ -6,6 +6,10 @@ class TweetsController < ApplicationController
   def index
     @tweets = Tweet.all
     @tweet  = Tweet.new
+    @notifications = current_user.passive_notifications.page(params[:page]).per(10)
+    @notifications.where(checked: false).each do |notification|
+        notification.update(checked: true)
+    end
   end
 
   def timeline
