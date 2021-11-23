@@ -1,24 +1,23 @@
-# README
+# Twitter Clone
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+作成した Twitter Clone について以下に記します
 
-Things you may want to cover:
+## 使用例
 
-* Ruby version
+以下のように使用できます
 
-* System dependencies
+* ログインする
 
-* Configuration
+![ログインする](GIF/login.gif)
 
-* Database creation
+* ツイートする
 
-* Database initialization
+![ツイートする](GIF/tweet.gif)
 
-* How to run the test suite
+* フォローする
 
-* Services (job queues, cache servers, search engines, etc.)
+![ツイートする](GIF/follow.gif)
 
-* Deployment instructions
+* フィルタリングする
 
-* ...
+![フィルタリングする](GIF/filter.gif)
