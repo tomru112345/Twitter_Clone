@@ -1,0 +1,24 @@
+= div_for user, class: "list-group-item" do |u|
+  %h4.user
+    %span.user-name
+      - if u.screen_name.present?
+        = link_to u.screen_name, user_path(u)
+      - else
+        = link_to u.name, user_path(u)
+      - sum = u.score_sum
+      - num = u.tweets.count
+      - if num >= 10
+        - if sum.to_f / num.to_f >= 0.3
+          %i.fas.fa-award
+    %span.user-id
+      @#{u.name}
+  .bio
+    = u.bio
+  .follow-unfollow
+    - if u.id != current_user.id
+      - if u.followed_by? current_user
+        = link_to user_follows_path(u), method: :delete do
+          %i.fas.fa-handshake
+      - else
+        = link_to user_follows_path(u), method: :post do
+          %i.far.fa-handshake

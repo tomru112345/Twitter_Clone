@@ -1,0 +1,8 @@
+.col-xs-8#users-content
+  = render partial: "users/header"
+  .list-group
+    - if @user.favorites.empty?
+      .list-group-item
+        まだお気に入りに登録されたツイートはありません
+    = render partial: "users/tweet", collection: @favorites.map{|f| f.tweet }
+    = paginate(@favorites)

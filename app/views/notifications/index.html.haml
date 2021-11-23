@@ -1,0 +1,9 @@
+.col-lg-12#notifications-content
+  .container
+    .row
+      .list-group
+        .list-group-item
+          %h4 通知一覧
+        .list-group-item
+          = render partial: "notification", collection: @notifications
+          = paginate(@notifications)

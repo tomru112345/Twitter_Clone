@@ -1,0 +1,48 @@
+= div_for tweet, style: get_color(tweet.score), class: "list-group-item" do |t|
+  %h4.user
+    %span.user-name
+      - if t.user.screen_name.present?
+        = link_to t.user.screen_name, user_path(t.user)
+      - else
+        = link_to t.user.name, user_path(t.user)
+      - sum = t.user.score_sum
+      - num = t.user.tweets.count
+      - if num >= 10
+        - if sum.to_f / num.to_f >= 0.3
+          %i.fas.fa-award
+    %span.user-id
+      @#{t.user.name}
+
+    %span.time.pull-right
+      = distance_of_time_in_words_to_now(t.created_at)
+    
+    .clear
+  .tweet-content
+    %p
+      = t.content
+    .content-footer
+      - if t.user.id != current_user.id
+        - if t.user.followed_by? current_user
+          = link_to user_follows_path(t.user), method: :delete do
+            %i.fas.fa-handshake
+        - else
+          = link_to user_follows_path(t.user), method: :post do
+            %i.far.fa-handshake
+
+      - if t.favorited_by? current_user
+        = link_to tweet_favorites_path(t), :method => :delete do
+          %i.fas.fa-kiss-wink-heart
+      - else
+        = link_to tweet_favorites_path(t), :method => :post do
+          %i.far.fa-kiss-wink-heart
+      
+      #{t.favorites.count}
+
+      - if t.doubted_by? current_user
+        = link_to tweet_doubts_path(t), method: :delete do
+          %i.fas.fa-frown
+      - else
+        = link_to tweet_doubts_path(t), method: :post do
+          %i.far.fa-frown
+
+      #{t.doubts.count}
